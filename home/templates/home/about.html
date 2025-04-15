@@ -1,0 +1,29 @@
+
+{% extends 'base.html' %}
+{% block content %}
+    {% load static %}
+    <div class="p-3">
+        <div class="container">
+            <div class="row mt-3">
+                <div class="col-md-6 mx-auto mb-3">
+                    <h2>About</h2>
+                    <hr />
+                    <p>
+                        At Movies Store, we offer a vast digital library that spans across genres, ensuring there's
+                        Browse our something for every movie lover. extensive collection of films, including the
+                        latest releases, timeless classics, and hidden gems. With just a few clicks, you can rent or
+                        purchase your favorite titles and instantly stream them in high-definition quality.
+                    </p>
+                    <p>
+                        Created by a team of passionate app developers, our team consisting of five members,
+                        Teja, Vishnu, Omar, Devland, and Josh, are happy to bring this website to life. From GT, we
+                        have created this website for our very first project. We hope you enjoy using our website.
+                    </p>
+                </div>
+                <div class="col-md-6 mx-auto mb-3text-center">
+                    <img src="{% static 'img/about.jpg'%}" class="max-width-100" alt="about" />
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

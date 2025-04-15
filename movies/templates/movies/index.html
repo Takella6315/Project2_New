@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container-fluid bg-light">
+    <div class="row">
+{#        <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-dark text-light sidebar">#}
+{#            <div class="position-sticky pt-3">#}
+{#                <ul class="nav flex-column">#}
+{#                    <li class="nav-item">#}
+{#                        <a class="nav-link active" aria-current="page" href="#">#}
+{#                            <i class="fa fa-tachometer-alt me-2"></i>#}
+{#                            Dashboard#}
+{#                        </a>#}
+{#                    </li>#}
+{#                    <li class="nav-item">#}
+{#                        <a class="nav-link" href="#">#}
+{#                            <i class="fa fa-calendar me-2"></i>#}
+{#                            Year in Review#}
+{#                        </a>#}
+{#                    </li>#}
+{#                    <li class="nav-item">#}
+{#                        <a class="nav-link" href="#">#}
+{#                            <i class="fa fa-piggy-bank me-2"></i>#}
+{#                            Budget#}
+{#                        </a>#}
+{#                    </li>#}
+{#                    <li class="nav-item">#}
+{#                        <a class="nav-link" href="#">#}
+{#                            <i class="fa fa-list-alt me-2"></i>#}
+{#                            Expenses#}
+{#                        </a>#}
+{#                    </li>#}
+{#                    <li class="nav-item">#}
+{#                        <a class="nav-link" href="#">#}
+{#                            <i class="fa fa-tags me-2"></i>#}
+{#                            Categories#}
+{#                        </a>#}
+{#                    </li>#}
+{#                </ul>#}
+{#            </div>#}
+{#        </nav>#}
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Dashboard</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
+                        <i class="fa fa-calendar me-2"></i>
+                        This week
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            Summary of Expenses
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="monthSelect" class="form-label">Select Month</label>
+                                <select class="form-select" id="monthSelect">
+                                    <option selected>December 2022</option>
+                                    </select>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-6 mb-2">
+                                    <div class="bg-secondary text-white p-3 rounded">
+                                        <h6>YTD Expenses</h6>
+                                        <h4>$24,717</h4>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 mb-2">
+                                    <div class="bg-success text-white p-3 rounded">
+                                        <h6>YTD Savings</h6>
+                                        <h4>$8,283</h4>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 mb-2">
+                                    <div class="bg-info text-white p-3 rounded">
+                                        <h6>Monthly Average</h6>
+                                        <h4>$2,060</h4>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 mb-2">
+                                    <div class="bg-warning text-dark p-3 rounded">
+                                        <h6>Monthly Budget</h6>
+                                        <h4>$2,750</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            YTD Savings Summary
+                        </div>
+                        <div class="card-body">
+                            <img src="{% static 'img/savings_chart.png' %}" alt="YTD Savings Chart" class="img-fluid">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            YTD Expenses by Category
+                        </div>
+                        <div class="card-body">
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" placeholder="Search categories" aria-label="Search categories">
+                                <button class="btn btn-outline-secondary" type="button"><i class="fa fa-search"></i></button>
+                            </div>
+                            <img src="{% static 'img/expenses_by_category.png' %}" alt="YTD Expenses by Category Chart" class="img-fluid">
+                            </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<style>
+    /* Custom styles for the sidebar */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 100; /* Behind the navbar */
+        padding: 48px 0 0; /* Account for navbar height */
+        box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    }
+
+    .sidebar .nav-link {
+        padding: 16px;
+        font-weight: 500;
+        color: #f8f9fa;
+    }
+
+    .sidebar .nav-link:hover {
+        color: #fff;
+        background-color: rgba(255, 255, 255, .1);
+    }
+
+    .sidebar .nav-link.active {
+        color: #fff;
+        background-color: #343a40;
+    }
+
+    .sidebar-heading {
+        font-size: .75rem;
+        text-transform: uppercase;
+    }
+
+    @media (max-width: 767.98px) {
+        .sidebar {
+            position: static;
+            height: auto;
+            border-right: none;
+            box-shadow: none;
+        }
+    }
+</style>
+
+{% endblock content %}
