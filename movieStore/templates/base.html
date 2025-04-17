@@ -20,12 +20,52 @@
             color: #343a40;
             margin: 0;
             padding: 0;
+            display: flex; /* Enable flexbox for the main layout */
+        }
+
+        #sidebar {
+            width: 240px; /* Fixed width for the sidebar */
+            background-color: #343a40;
+            color: #f8f9fa;
+            height: 100vh; /* Make sidebar full height */
+            position: fixed; /* Fixed sidebar */
+            top: 0;
+            left: 0;
+            z-index: 100;
+            padding-top: 56px; /* Account for potential fixed navbar at the top */
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            overflow-y: auto; /* Enable scrolling for long sidebars */
+        }
+
+        #sidebar .nav-link {
+            padding: 12px 20px;
+            color: #f8f9fa;
+            transition: background-color 0.2s ease;
+        }
+
+        #sidebar .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        #sidebar .nav-link.active {
+            background-color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .main-content {
+            flex-grow: 1; /* Take up remaining width */
+            margin-left: 240px; /* Push content to the right of the sidebar */
+            display: flex; /* Enable flexbox for navbar and content */
+            flex-direction: column; /* Stack navbar and content vertically */
+            min-height: 100vh; /* Ensure full height */
         }
 
         .navbar {
             background: linear-gradient(90deg, #2c3e50 0%, #4ca1af 100%);
-            padding: 1rem 0;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            padding: 1rem 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            color: white;
+            z-index: 99; /* Ensure navbar is below the fixed sidebar */
         }
 
         .navbar-brand {
@@ -36,119 +76,140 @@
         }
 
         .navbar-brand img {
-            height: 60px;
+            height: 30px; /* Adjust logo height */
             margin-right: 10px;
-        }
-
-        .navbar-toggler {
-            border: none;
-        }
-
-        .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3e%3cpath stroke='rgba(255, 255, 255, 0.7)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
         }
 
         .navbar-nav .nav-link {
             color: white !important;
-            padding: 0.75rem 1.2rem;
-            transition: opacity 0.3s ease;
         }
 
-        .navbar-nav .nav-link:hover {
-            opacity: 0.8;
-        }
-
-        .navbar-nav .nav-link.active {
-            font-weight: 500;
-        }
-
-        .navbar-nav .dropdown-menu {
-            background-color: #343a40;
-            border: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .navbar-nav .dropdown-item {
-            color: white;
-            transition: background-color 0.3s ease;
-        }
-
-        .navbar-nav .dropdown-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .content-wrapper {
-            padding-top: 0; /* Set padding-top to 0 */
-            margin-top: 0; /* Explicitly set margin-top to 0 */
-            min-height: calc(100vh - 120px); /* Adjust based on navbar and footer height */
+        .content-area {
+            padding: 20px;
+            flex-grow: 1; /* Allow content area to take remaining vertical space */
         }
 
         .ms-footer {
-            background-color: #343a40;
-            color: #f8f9fa;
+            background-color: #f8f9fa;
+            color: #343a40;
             text-align: center;
-            padding: 20px 0;
+            padding: 15px 20px;
             font-size: 0.9rem;
-            margin-top: 40px; /* Add some space between content and footer */
+            border-top: 1px solid #dee2e6;
         }
 
-        .ms-footer a {
-            color: #4ca1af;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .ms-footer a:hover {
-            color: #2c8a99;
+        /* Adjust for smaller screens where sidebar might collapse */
+        @media (max-width: 767.98px) {
+            body {
+                flex-direction: column; /* Stack vertically on small screens */
+            }
+            #sidebar {
+                position: static;
+                width: 100%;
+                height: auto;
+                padding-top: 0;
+                box-shadow: none;
+                overflow-y: visible;
+                margin-bottom: 20px; /* Add space below the sidebar */
+            }
+            .main-content {
+                margin-left: 0;
+            }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'home.index' %}">
-                <img src="{% static 'img/MoneyParceBg.png' %}" alt="logo" height="60"/>
-                MoneyParce
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
-                    aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'movies.index' %}">Spending</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accounts.logout' %}">Logout ({{ user.username }})</a>
-                        </li>
-                    {% else %}
-                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'home.about' %}">About</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accounts.login' %}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accounts.signup' %}">Sign Up</a>
-                        </li>
-                    {% endif %}
-                </ul>
+    <nav id="sidebar">
+        <div class="position-sticky pt-3">
+            <div class="d-flex align-items-center mb-3 ms-2">
+                <img src="{% static 'img/MoneyParceBg.png' %}" alt="logo" height="55" class="me-2"/>
+                <h6 class="text-white mb-0">MoneyParce</h6>
             </div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="#">
+                        <i class="fa fa-tachometer-alt me-2"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fa fa-calendar me-2"></i>
+                        Year in Review
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fa fa-piggy-bank me-2"></i>
+                        Budgeting
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fa fa-list-alt me-2"></i>
+                        Expenses
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fa fa-tags me-2"></i>
+                        Categories
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fa fa-chart-bar me-2"></i>
+                        Reports & Insights
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fa fa-lightbulb me-2"></i>
+                        Finance Tips
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fa fa-sun me-2"></i>
+                        Light/Dark Mode
+                    </a>
+                </li>
+            </ul>
         </div>
     </nav>
-    <div class="content-wrapper">
-        {% block content %}
-        {% endblock content %}
+
+    <div class="main-content">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Dashboard</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavTop" aria-controls="navbarNavTop" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavTop">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="#">Spending</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Logout (admin)</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="content-area">
+            {% block content %}
+            {% endblock content %}
+        </div>
+
+        <footer class="ms-footer">
+            <div class="container">
+                &copy; {{ year|date:"Y" }} MoneyParce. All rights reserved. |
+                <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a>
+            </div>
+        </footer>
     </div>
 
-    <footer class="ms-footer">
-        <div class="container">
-            &copy; {{ year|date:"Y" }} MoneyParce. All rights reserved. |
-            <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a>
-        </div>
-    </footer>
-    </body>
+</body>
 </html>
