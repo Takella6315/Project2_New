@@ -4,6 +4,16 @@ from .forms import CustomUserCreationForm, CustomErrorList
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login as auth_login, authenticate, logout as auth_logout
+from django.contrib.auth.models import User
+from .forms import (
+    CustomUserCreationForm, CustomErrorList,
+    SecurityQuestionsForm, ResetPasswordForm
+)
+from .models import SecurityQuestions, UserProfile  # Import UserProfile
+from django.contrib.auth.hashers import make_password
+import random
 
 
 @login_required
@@ -111,8 +121,6 @@ def reset_password(request, username):
         return render(request, 'accounts/reset_password.html',
                       {'template_data': template_data})
 
-
-# Update your signup view to save security questions
 def signup(request):
     template_data = {}
     template_data['title'] = 'Sign Up'
@@ -126,6 +134,11 @@ def signup(request):
         form = CustomUserCreationForm(request.POST, error_class=CustomErrorList)
         if form.is_valid():
             user = form.save()
+            UserProfile.objects.create(
+                user=user,
+                monthly_budget=form.cleaned_data['monthly_budget'],
+                yearly_income=form.cleaned_data['yearly_income']
+            )
             SecurityQuestions.objects.create(
                 user=user,
                 question_1=form.cleaned_data['security_question_1'],
@@ -138,6 +151,7 @@ def signup(request):
             template_data['form'] = form
             return render(request, 'accounts/signup.html',
                           {'template_data': template_data})
+
 
 
 @login_required

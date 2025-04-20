@@ -23,3 +23,12 @@ class Review(models.Model):
         on_delete=models.CASCADE)
     def __str__(self):
         return str(self.id) + ' - ' + self.movie.name
+
+class BudgetCategory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    budget_limit = models.IntegerField()
+    amount_spent = models.IntegerField()
+
+    def __str__(self):
+        return self.name

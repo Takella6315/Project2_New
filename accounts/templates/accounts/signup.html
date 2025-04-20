@@ -6,11 +6,54 @@
       <div class="col-md-8">
         <div class="card shadow p-3 mb-4 rounded">
           <div class="card-body">
-            <h2>Sign Up</h2>
+            <h2>Sign Up Now!</h2>
             <hr />
             <form method="POST">
               {% csrf_token %}
-              {{ template_data.form.as_p }}
+              {{ template_data.form.errors }}
+              <div class="mb-3">
+                {{ template_data.form.username.label_tag }}
+                {{ template_data.form.username }}
+              </div>
+              <div class="mb-3">
+                {{ template_data.form.email.label_tag }}
+                {{ template_data.form.email }}
+              </div>
+              <div class="mb-3">
+                {{ template_data.form.password1.label_tag }}
+                {{ template_data.form.password1 }}
+              </div>
+              <div class="mb-3">
+                {{ template_data.form.password2.label_tag }}
+                {{ template_data.form.password2 }}
+              </div>
+              <div class="mb-3">
+                {{ template_data.form.monthly_budget.label_tag }}
+                {{ template_data.form.monthly_budget }}
+                <small class="form-text text-muted">Optional: Enter your estimated monthly budget.</small>
+              </div>
+              <div class="mb-3">
+                {{ template_data.form.yearly_income.label_tag }}
+                {{ template_data.form.yearly_income }}
+                <small class="form-text text-muted">Optional: Enter your estimated yearly income.</small>
+              </div>
+              <hr />
+              <div class="mb-3">
+                {{ template_data.form.security_question_1.label_tag }}
+                {{ template_data.form.security_question_1 }}
+              </div>
+              <div class="mb-3">
+                {{ template_data.form.security_answer_1.label_tag }}
+                {{ template_data.form.security_answer_1 }}
+              </div>
+              <div class="mb-3">
+                {{ template_data.form.security_question_2.label_tag }}
+                {{ template_data.form.security_question_2 }}
+              </div>
+              <div class="mb-3">
+                {{ template_data.form.security_answer_2.label_tag }}
+                {{ template_data.form.security_answer_2 }}
+              </div>
               <button type="submit"
                 class="btn bg-dark text-white">Sign Up
               </button>

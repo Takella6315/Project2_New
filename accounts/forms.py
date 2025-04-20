@@ -3,6 +3,7 @@ from django.forms.utils import ErrorList
 from django.utils.safestring import mark_safe
 from django import forms
 from .models import SecurityQuestions
+from django.contrib.auth.models import User  # Import the User model
 
 
 class CustomErrorList(ErrorList):
@@ -13,6 +14,16 @@ class CustomErrorList(ErrorList):
 
 
 class CustomUserCreationForm(UserCreationForm):
+    monthly_budget = forms.IntegerField(
+        label='Monthly Budget',
+        required=False,  # Make it optional if you want
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    yearly_income = forms.IntegerField(
+        label='Yearly Income',
+        required=False,  # Make it optional if you want
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
     SECURITY_QUESTIONS = [
         ('What was your first pet\'s name?', 'What was your first pet\'s name?'),
         ('What city were you born in?', 'What city were you born in?'),
@@ -21,19 +32,25 @@ class CustomUserCreationForm(UserCreationForm):
     ]
 
     security_question_1 = forms.ChoiceField(choices=SECURITY_QUESTIONS)
-    security_answer_1 = forms.CharField(max_length=200)
+    security_answer_1 = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'class': 'form-control'}))
     security_question_2 = forms.ChoiceField(choices=SECURITY_QUESTIONS)
-    security_answer_2 = forms.CharField(max_length=200)
+    security_answer_2 = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'class': 'form-control'}))
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = UserCreationForm.Meta.fields + ('email',)
 
     def __init__(self, *args, **kwargs):
         super(CustomUserCreationForm, self).__init__(*args, **kwargs)
-        for fieldname in ['username', 'password1', 'password2',
+        for fieldname in ['username', 'email', 'password1', 'password2',
+                          'monthly_budget', 'yearly_income',
                           'security_question_1', 'security_answer_1',
                           'security_question_2', 'security_answer_2']:
             self.fields[fieldname].help_text = None
-            self.fields[fieldname].widget.attrs.update(
-                {'class': 'form-control'}
-            )
+            if fieldname not in ['security_question_1', 'security_question_2']:
+                self.fields[fieldname].widget.attrs.update(
+                    {'class': 'form-control'}
+                )
 
 
 class SecurityQuestionsForm(forms.Form):
@@ -67,3 +84,4 @@ class ResetPasswordForm(forms.Form):
         if password1 and password2 and password1 != password2:
             raise forms.ValidationError("The passwords don't match")
         return cleaned_data
+
