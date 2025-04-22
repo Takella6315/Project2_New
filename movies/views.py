@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from .forms import AdjustBudgetForm, AddCategoryForm
 from django.http import JsonResponse
 
+
 @login_required
 def index(request):
     search_term = request.GET.get('search')
@@ -17,7 +18,10 @@ def index(request):
     template_data['movies'] = movies
 
     # Get the user's monthly budget
-    template_data['monthly_budget'] = request.user.userprofile.monthly_budget
+    if hasattr(request.user, 'userprofile'):
+        template_data['monthly_budget'] = request.user.userprofile.monthly_budget
+    else:
+        template_data['monthly_budget'] = 0  # Or some other default value
 
     # Get the user's budget categories
     template_data['budget_categories'] = BudgetCategory.objects.filter(user=request.user)

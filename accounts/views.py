@@ -1,20 +1,12 @@
-from django.shortcuts import render
-from django.contrib.auth import login as auth_login, authenticate, logout as auth_logout
-from .forms import CustomUserCreationForm, CustomErrorList
-from django.shortcuts import redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login as auth_login, authenticate, logout as auth_logout
 from django.contrib.auth.models import User
-from .forms import (
-    CustomUserCreationForm, CustomErrorList,
-    SecurityQuestionsForm, ResetPasswordForm
-)
-from .models import SecurityQuestions, UserProfile  # Import UserProfile
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
-import random
+from .forms import CustomUserCreationForm, CustomErrorList, SecurityQuestionsForm, ResetPasswordForm
+from .models import SecurityQuestions, UserProfile  # Import UserProfile
 
+import random
 
 @login_required
 def logout(request):
@@ -26,32 +18,20 @@ def login(request):
     template_data['title'] = 'Login'
     if request.method == 'GET':
         return render(request, 'accounts/login.html',
-            {'template_data': template_data})
+                       {'template_data': template_data})
     elif request.method == 'POST':
         user = authenticate(
             request,
-            username = request.POST['username'],
-            password = request.POST['password']
+            username=request.POST['username'],
+            password=request.POST['password']
         )
         if user is None:
             template_data['error'] = 'The username or password is incorrect.'
             return render(request, 'accounts/login.html',
-                {'template_data': template_data})
+                           {'template_data': template_data})
         else:
             auth_login(request, user)
             return redirect('movies.index')
-
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login as auth_login, authenticate, logout as auth_logout
-from django.contrib.auth.models import User
-from .forms import (
-    CustomUserCreationForm, CustomErrorList,
-    SecurityQuestionsForm, ResetPasswordForm
-)
-from .models import SecurityQuestions
-from django.contrib.auth.hashers import make_password
-import random
 
 
 def forgot_password(request):
@@ -121,6 +101,7 @@ def reset_password(request, username):
         return render(request, 'accounts/reset_password.html',
                       {'template_data': template_data})
 
+
 def signup(request):
     template_data = {}
     template_data['title'] = 'Sign Up'
@@ -134,11 +115,7 @@ def signup(request):
         form = CustomUserCreationForm(request.POST, error_class=CustomErrorList)
         if form.is_valid():
             user = form.save()
-            UserProfile.objects.create(
-                user=user,
-                monthly_budget=form.cleaned_data['monthly_budget'],
-                yearly_income=form.cleaned_data['yearly_income']
-            )
+            #  No need to create the userprofile here, the signal will handle it
             SecurityQuestions.objects.create(
                 user=user,
                 question_1=form.cleaned_data['security_question_1'],
@@ -151,7 +128,6 @@ def signup(request):
             template_data['form'] = form
             return render(request, 'accounts/signup.html',
                           {'template_data': template_data})
-
 
 
 @login_required
