@@ -24,7 +24,10 @@ def index(request):
         template_data['monthly_budget'] = 0  # Or some other default value
 
     # Get the user's budget categories
-    template_data['budget_categories'] = BudgetCategory.objects.filter(user=request.user)
+    budget_categories = BudgetCategory.objects.filter(user=request.user)
+    template_data['budget_categories'] = budget_categories
+    template_data['total_spent'] = sum(cat.amount_spent for cat in budget_categories)
+
 
     return render(request, 'movies/index.html', {'template_data': template_data})
 
