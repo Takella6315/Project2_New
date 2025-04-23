@@ -27,8 +27,8 @@ class Review(models.Model):
 class BudgetCategory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
-    budget_limit = models.IntegerField()
-    amount_spent = models.IntegerField()
+    budget_limit = models.DecimalField(max_digits=10, decimal_places=2)
+    amount_spent = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
         return self.name
