@@ -4,6 +4,7 @@ from .models import Movie, Review, BudgetCategory  # Import BudgetCategory
 from django.contrib.auth.decorators import login_required
 from .forms import AdjustBudgetForm, AddCategoryForm
 from django.http import JsonResponse
+from django.core.files.storage import FileSystemStorage
 
 
 @login_required
@@ -123,3 +124,23 @@ def delete_review(request, id, review_id):
         user=request.user)
     review.delete()
     return redirect('movies.show', id=id)
+
+@login_required
+def profile(request):
+    user_profile = request.user.userprofile
+    budget_categories = BudgetCategory.objects.filter(user=request.user)
+    template_data = {}
+    template_data['title'] = 'Profile'
+    return render(request, 'movies/profile.html', {'template_data': template_data})
+
+@login_required
+def upload_profile_picture(request):
+    if request.method == "POST" and request.FILES.get('profile_picture'):
+        user_profile = request.user.userprofile
+        profile_picture = request.FILES['profile_picture']
+        fs = FileSystemStorage()
+        filename = fs.save(f"profile_pictures/{request.user.id}/{profile_picture.name}", profile_picture)
+        user_profile.profile_picture = fs.url(filename)
+        user_profile.save()
+        return JsonResponse({'status': 'success', 'image_url': user_profile.profile_picture})
+    return JsonResponse({'status': 'error', 'error': 'Invalid request'}, status=400)

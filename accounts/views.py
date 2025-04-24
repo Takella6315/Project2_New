@@ -5,6 +5,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from .forms import CustomUserCreationForm, CustomErrorList, SecurityQuestionsForm, ResetPasswordForm
 from .models import SecurityQuestions, UserProfile  # Import UserProfile
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.core.files.base import ContentFile
+from accounts.models import UserProfile
 
 import random
 
@@ -136,3 +140,13 @@ def orders(request):
     template_data['title'] = 'Orders'
     template_data['orders'] = request.user.order_set.all()
     return render(request, 'accounts/orders.html', {'template_data': template_data})
+
+@csrf_exempt
+def upload_profile_picture(request):
+    if request.method == 'POST' and request.FILES.get('profile_picture'):
+        profile_picture = request.FILES['profile_picture']
+        user_profile = UserProfile.objects.get(user=request.user)
+        user_profile.profile_picture.save(profile_picture.name, ContentFile(profile_picture.read()))
+        user_profile.save()
+        return JsonResponse({'status': 'success', 'image_url': user_profile.profile_picture.url})
+    return JsonResponse({'status': 'error', 'error': 'Invalid request'})

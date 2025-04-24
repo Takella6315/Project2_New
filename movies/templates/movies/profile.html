@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 120px);">
+    <div class="profile-container">
+        <div class="profile-header">
+            <h2>User Profile</h2>
+        </div>
+        <div class="profile-details">
+            <p><strong>Username:</strong> {{ user.username }}</p>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+        </div>
+        <div class="profile-picture text-center">
+            <img id="profile-picture" src="{% if user.userprofile.profile_picture %}{{ user.userprofile.profile_picture.url }}{% else %}{% static 'img/default-profile.jpg' %}{% endif %}" alt="Profile Picture" class="img-thumbnail" style="width: 150px; height: 150px;">
+            <form id="upload-form" enctype="multipart/form-data" method="post">
+                {% csrf_token %}
+                <input type="file" name="profile_picture" accept="image/*" class="form-control mt-3">
+                <button type="submit" class="btn btn-primary mt-3">Upload Profile Picture</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('upload-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        fetch("{% url 'accounts.upload_profile_picture' %}", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                document.getElementById('profile-picture').src = data.image_url;
+            } else {
+                alert("Error uploading profile picture: " + data.error);
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred while uploading the profile picture.");
+        });
+    });
+</script>
+{% endblock content %}
