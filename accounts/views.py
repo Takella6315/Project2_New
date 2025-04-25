@@ -15,7 +15,7 @@ import random
 @login_required
 def logout(request):
     auth_logout(request)
-    return redirect('home.index')
+    return redirect('LandingPage.index')
 
 def login(request):
     template_data = {}
@@ -35,7 +35,7 @@ def login(request):
                            {'template_data': template_data})
         else:
             auth_login(request, user)
-            return redirect('movies.index')
+            return redirect('dashboard.index')
 
 
 def forgot_password(request):
@@ -127,19 +127,12 @@ def signup(request):
                 question_2=form.cleaned_data['security_question_2'],
                 answer_2=form.cleaned_data['security_answer_2']
             )
-            return redirect('home.index')
+            return redirect('LandingPage.index')
         else:
             template_data['form'] = form
             return render(request, 'accounts/signup.html',
                           {'template_data': template_data})
 
-
-@login_required
-def orders(request):
-    template_data = {}
-    template_data['title'] = 'Orders'
-    template_data['orders'] = request.user.order_set.all()
-    return render(request, 'accounts/orders.html', {'template_data': template_data})
 
 @csrf_exempt
 def upload_profile_picture(request):

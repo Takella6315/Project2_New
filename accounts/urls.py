@@ -8,7 +8,6 @@ urlpatterns = [
     path('logout/', views.logout, name='accounts.logout'),
     path('forgot-password/', views.forgot_password, name='accounts.forgot_password'),
     path('reset-password/<str:username>/', views.reset_password, name='accounts.reset_password'),
-    path('orders/', views.orders, name='accounts.orders'),
-    path('movies/upload-profile-picture/', views.upload_profile_picture, name='accounts.upload_profile_picture'),
+    path('dashboard/upload-profile-picture/', views.upload_profile_picture, name='accounts.upload_profile_picture'),
 
 ]
