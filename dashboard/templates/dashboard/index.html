@@ -341,6 +341,22 @@
 </div>
 
 <section class="mb-4">
+  <h2>Connect External Accounts</h2>
+  <div class="card">
+      <div class="card-body">
+          <p>Securely link your external bank accounts via Stripe to automatically sync transactions.</p>
+          <form action="{% url 'dashboard.connect_stripe' %}" method="post">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary">
+                  <i class="fab fa-stripe me-2"></i>Connect with Stripe
+                  </button>
+          </form>
+           <small class="d-block text-muted mt-2">You will be redirected to Stripe to securely log in or sign up.</small>
+      </div>
+  </div>
+</section>
+
+<section class="mb-4">
   <h2>Recent Transactions</h2>
   <div class="card">
     <div class="card-body">
