@@ -1,236 +1,490 @@
-{% extends 'base.html' %}
-{% load static %}
-{% block content %}
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Dashboard</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-        </div>
-    </div>
+{% extends 'base.html' %} {% load static %} {% block content %}
+<div
+  class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom"
+>
+  <h1 class="h2">Dashboard</h1>
+  <div class="btn-toolbar mb-2 mb-md-0"></div>
+</div>
 
-    <section class="mb-4">
-        <h2>Budget Overview</h2>
-        <div class="card">
+<section class="mb-4">
+  <h2>Budget Overview</h2>
+  <div class="card">
+    <div class="card-body">
+      <div
+        class="row row-cols-1 row-cols-md-3 g-4"
+        id="budgetCategoryContainer"
+      >
+        <div class="col">
+          <div class="card h-100">
             <div class="card-body">
-                <div class="row row-cols-1 row-cols-md-3 g-4">
-                    <div class="col">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">Monthly Budget</h5>
-                                <p class="card-text budget-display">Budget: ${{ template_data.monthly_budget }}</p>
-                                <p class="card-text">Spent: $<span id="totalSpent">{{ template_data.total_spent }}</span></p>
-                                {% if template_data.total_spent > template_data.monthly_budget %}
-                                    <div class="alert alert-warning mt-2" role="alert">
-                                        ⚠️ Over Budget!
-                                    </div>
-                                {% endif %}
-                                <div class="progress">
-                                    <div class="progress-bar bg-success" style="width: 76%" role="progressbar"
-                                         aria-valuenow="76" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                                <button class="btn btn-sm btn-outline-secondary mt-2" data-bs-toggle="modal"
-                                        data-bs-target="#adjustBudgetModal">Adjust Budget
-                                </button>
-                                 <div class="alert alert-warning mt-2" role="alert" style="display: none;">
-                                    Budget exceeded!
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% for category in template_data.budget_categories %}
-                    <div class="col" id="category-{{ category.id }}">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ category.name }}</h5>
-                                <p class="card-text">Budget: ${{ category.budget_limit }}</p>
-                                 <p class="card-text">Spent: ${{ category.amount_spent }}</p>
-                                {% if category.amount_spent > category.budget_limit %}
-                                    <div class="alert alert-warning mt-2" role="alert">
-                                        ⚠️ Over Budget!
-                                    </div>
-                                {% endif %}
-                                <div class="progress">
-                                    <div class="progress-bar bg-info" style="width: 50%" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                <button class="btn btn-sm btn-primary mt-3" data-bs-toggle="modal"
-                        data-bs-target="#addCategoryModal">Add New Budget Category
-                </button>
+              <h5 class="card-title">Monthly Budget</h5>
+              <p class="card-text budget-display">
+                Budget: ${{ template_data.monthly_budget }}
+              </p>
+              <p class="card-text">
+                Spent: $<span id="totalSpentDisplay"
+                  >{{ template_data.total_spent|floatformat:2 }}</span
+                >
+              </p>
+              {% if template_data.total_spent > template_data.monthly_budget %}
+              <div class="alert alert-warning mt-2" role="alert">
+                ⚠️ Over Budget!
+              </div>
+              {% endif %}
+              <div class="progress">
+                <div
+                  class="progress-bar bg-success"
+                  style="width: 76%"
+                  role="progressbar"
+                  aria-valuenow="76"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                ></div>
+              </div>
+              <button
+                class="btn btn-sm btn-outline-secondary mt-2"
+                data-bs-toggle="modal"
+                data-bs-target="#adjustBudgetModal"
+              >
+                Adjust Budget
+              </button>
+              <div
+                class="alert alert-warning mt-2"
+                role="alert"
+                style="display: none"
+              >
+                Budget exceeded!
+              </div>
             </div>
+          </div>
         </div>
-    </section>
-
-    <div class="modal fade" id="adjustBudgetModal" tabindex="-1" aria-labelledby="adjustBudgetModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="adjustBudgetModalLabel">Adjust Monthly Budget</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="adjustBudgetForm" method="post" action="{% url 'dashboard.adjust_budget' %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="new_budget" class="form-label">New Monthly Budget:</label>
-                            <input type="number" class="form-control" id="new_budget" name="new_budget"
-                                   value="{{ template_data.monthly_budget }}" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addCategoryModalLabel">Add New Budget Category</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addCategoryForm" method="post" action="{% url 'dashboard.add_budget_category' %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="category_name" class="form-label">Category Name:</label>
-                            <input type="text" class="form-control" id="category_name" name="category_name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="category_limit" class="form-label">Budget Limit:</label>
-                            <input type="number" class="form-control" id="category_limit" name="category_limit" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="category_spent" class="form-label">Amount Spent:</label>
-                            <input type="number" class="form-control" id="category_spent" name="category_spent" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Add Category</button>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <section class="mb-4">
-        <h2>Overview</h2>
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">Today's Spending</div>
-                    <div class="card-body">
-                        <p class="card-text">$XX.XX</p>
-                        <button class="btn btn-sm btn-outline-secondary">Add Transaction</button>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">This Week's Spending</div>
-                    <div class="card-body">
-                        <p class="card-text">$YYY.YY</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">This Month's Spending</div>
-                    <div class="card-body">
-                        <p class="card-text">$ZZZZ.ZZ</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="mb-4">
-        <h2>Spending by Category</h2>
-        <div class="card">
+        {% for category in template_data.budget_categories %}
+        <div class="col" id="category-card-{{ category.id }}">
+          <div class="card h-100">
             <div class="card-body">
-                <div id="moneyFlowChart" style="width: 100%; height: 400px;"></div> <button class="btn btn-sm btn-outline-secondary mt-2">View Detailed Categories</button>
+              <h5 class="card-title">{{ category.name }}</h5>
+              <p class="card-text">
+                Budget: ${{ category.budget_limit|floatformat:2 }}
+              </p>
+              <p class="card-text">
+                Spent: $<span id="category-spent-{{ category.id }}"
+                  >{{ category.amount_spent|floatformat:2 }}</span
+                >
+              </p>
+              {% if category.amount_spent > category.budget_limit %}
+              <div class="alert alert-warning mt-2" role="alert">
+                ⚠️ Over Budget!
+              </div>
+              {% endif %}
+              <div class="progress">
+                <div
+                  class="progress-bar bg-info"
+                  style="width: 50%"
+                  role="progressbar"
+                  aria-valuenow="50"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                ></div>
+              </div>
             </div>
+          </div>
         </div>
-    </section>
-
-    <section class="mb-4">
-        <h2>Spending Habits Report</h2>
-        <div class="card">
-            <div class="card-body">
-                <p>AI Insight: You spent significantly more on dining out last month compared to the previous month.</p>
-                <img src="{% static 'img/money_flow_placeholder.png' %}" alt="Money Flow" class="img-fluid">
-                <button class="btn btn-sm btn-outline-secondary mt-2">Generate Full Report</button>
-                <button class="btn btn-sm btn-info mt-2">Input Income</button>
-            </div>
-        </div>
-    </section>
-
-    <section class="mb-4">
-        <h2>Personalized Finance Tips</h2>
-        <div class="card">
-            <div class="card-body">
-                <p><i class="fa fa-lightbulb me-2"></i>Tip: Consider reducing your subscriptions by reviewing unused services.</p>
-                <p><i class="fa fa-lightbulb me-2"></i>Tip: Setting up automatic transfers to a savings account can help you save
-                    consistently.</p>
-            </div>
-        </div>
-    </section>
-
-    <div class="form-check form-switch mb-3">
-        <input class="form-check-input" type="checkbox" id="darkModeToggle">
-        <label class="form-check-label" for="darkModeToggle">Dark Mode</label>
+        {% endfor %}
+      </div>
+      <button
+        class="btn btn-sm btn-primary mt-3"
+        data-bs-toggle="modal"
+        data-bs-target="#addCategoryModal"
+      >
+        Add New Budget Category
+      </button>
+      <button
+        class="btn btn-sm btn-success mt-3 ms-2"
+        data-bs-toggle="modal"
+        data-bs-target="#addTransactionModal"
+      >
+        <i class="fa fa-plus me-1"></i> Add Transaction
+      </button>
     </div>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <style>
-        body.dark-mode {
-            background-color: #121212;
-            color: #fff;
-        }
+  </div>
+</section>
 
-        .card.dark-mode {
-            background-color: #1e1e1e;
-            color: #fff;
-            border-color: #333;
-        }
+<div
+  class="modal fade"
+  id="adjustBudgetModal"
+  tabindex="-1"
+  aria-labelledby="adjustBudgetModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="adjustBudgetModalLabel">
+          Adjust Monthly Budget
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form
+          id="adjustBudgetForm"
+          method="post"
+          action="{% url 'dashboard.adjust_budget' %}"
+        >
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="new_budget" class="form-label"
+              >New Monthly Budget:</label
+            >
+            <input
+              type="number"
+              class="form-control"
+              id="new_budget"
+              name="new_budget"
+              value="{{ template_data.monthly_budget }}"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
-        .card-header.dark-mode {
-            background-color: #2a2a2a;
-            color: #fff;
-            border-bottom-color: #333;
-        }
+<div
+  class="modal fade"
+  id="addCategoryModal"
+  tabindex="-1"
+  aria-labelledby="addCategoryModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addCategoryModalLabel">
+          Add New Budget Category
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form
+          id="addCategoryForm"
+          method="post"
+          action="{% url 'dashboard.add_budget_category' %}"
+        >
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="category_name" class="form-label">Category Name:</label>
+            <input
+              type="text"
+              class="form-control"
+              id="category_name"
+              name="category_name"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="category_limit" class="form-label">Budget Limit:</label>
+            <input
+              type="number"
+              class="form-control"
+              id="category_limit"
+              name="category_limit"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="category_spent" class="form-label">Amount Spent:</label>
+            <input
+              type="number"
+              class="form-control"
+              id="category_spent"
+              name="category_spent"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary">Add Category</button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
-        .btn-outline-secondary.dark-mode {
-            color: #fff;
-            border-color: #555;
-        }
+<div
+  class="modal fade"
+  id="addTransactionModal"
+  tabindex="-1"
+  aria-labelledby="addTransactionModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addTransactionModalLabel">
+          Add New Transaction
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div
+          id="transactionErrorAlert"
+          class="alert alert-danger"
+          style="display: none"
+          role="alert"
+        ></div>
+        <form
+          id="addTransactionForm"
+          method="post"
+          action="{% url 'dashboard.add_transaction' %}"
+        >
+          {% csrf_token %}
+          <div class="mb-3">
+            <label
+              for="{{ template_data.transaction_form.category.id_for_label }}"
+              class="form-label"
+              >{{ template_data.transaction_form.category.label }}</label
+            >
+            {{ template_data.transaction_form.category }}
+            <div class="invalid-feedback" id="error_category"></div>
+          </div>
+          <div class="mb-3">
+            <label
+              for="{{ template_data.transaction_form.amount.id_for_label }}"
+              class="form-label"
+              >{{ template_data.transaction_form.amount.label }}</label
+            >
+            {{ template_data.transaction_form.amount }}
+            <div class="invalid-feedback" id="error_amount"></div>
+          </div>
+          <div class="mb-3">
+            <label
+              for="{{ template_data.transaction_form.description.id_for_label }}"
+              class="form-label"
+              >{{ template_data.transaction_form.description.label }}</label
+            >
+            {{ template_data.transaction_form.description }}
+            <div class="invalid-feedback" id="error_description"></div>
+          </div>
+          <div class="mb-3">
+            <label
+              for="{{ template_data.transaction_form.date.id_for_label }}"
+              class="form-label"
+              >{{ template_data.transaction_form.date.label }}</label
+            >
+            {{ template_data.transaction_form.date }}
+            <div class="invalid-feedback" id="error_date"></div>
+          </div>
+          <button type="submit" class="btn btn-primary">Add Transaction</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 
-        .btn-outline-secondary.dark-mode:hover {
-            background-color: #333;
-            color: #fff;
-            border-color: #555;
-        }
+<section class="mb-4">
+  <h2>Recent Transactions</h2>
+  <div class="card">
+    <div class="card-body">
+      <table class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Category</th>
+            <th scope="col">Description</th>
+            <th scope="col" class="text-end">Amount</th>
+          </tr>
+        </thead>
+        <tbody id="transactionListBody">
+          {% for transaction in template_data.recent_transactions %}
+          <tr id="transaction-row-{{ transaction.id }}">
+            <td>{{ transaction.date|date:"Y-m-d" }}</td>
+            <td>{{ transaction.category.name }}</td>
+            <td>{{ transaction.description|default:"-" }}</td>
+            <td class="text-end text-danger">
+              -${{ transaction.amount|floatformat:2 }}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="text-center">
+              No transactions recorded yet.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
 
-        .progress-bar.dark-mode {
-            background-color: #4CAF50;
-        }
+<section class="mb-4">
+  <h2>Overview</h2>
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">Today's Spending</div>
+        <div class="card-body">
+          <p class="card-text">$XX.XX</p>
+          <button class="btn btn-sm btn-outline-secondary">
+            Add Transaction
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">This Week's Spending</div>
+        <div class="card-body">
+          <p class="card-text">$YYY.YY</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">This Month's Spending</div>
+        <div class="card-body">
+          <p class="card-text">$ZZZZ.ZZ</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-        .alert-warning.dark-mode {
-            background-color: #262626;
-            border-color: #333;
-            color: #fff;
-        }
+<section class="mb-4">
+  <h2>Spending by Category</h2>
+  <div class="card">
+    <div class="card-body">
+      <div id="moneyFlowChart" style="width: 100%; height: 400px"></div>
+      <button class="btn btn-sm btn-outline-secondary mt-2">
+        View Detailed Categories
+      </button>
+    </div>
+  </div>
+</section>
 
-    </style>
-    <script>
+<section class="mb-4">
+  <h2>Spending Habits Report</h2>
+  <div class="card">
+    <div class="card-body">
+      <p>
+        AI Insight: You spent significantly more on dining out last month
+        compared to the previous month.
+      </p>
+      <img
+        src="{% static 'img/money_flow_placeholder.png' %}"
+        alt="Money Flow"
+        class="img-fluid"
+      />
+      <button class="btn btn-sm btn-outline-secondary mt-2">
+        Generate Full Report
+      </button>
+      <button class="btn btn-sm btn-info mt-2">Input Income</button>
+    </div>
+  </div>
+</section>
+
+<section class="mb-4">
+  <h2>Personalized Finance Tips</h2>
+  <div class="card">
+    <div class="card-body">
+      <p>
+        <i class="fa fa-lightbulb me-2"></i>Tip: Consider reducing your
+        subscriptions by reviewing unused services.
+      </p>
+      <p>
+        <i class="fa fa-lightbulb me-2"></i>Tip: Setting up automatic transfers
+        to a savings account can help you save consistently.
+      </p>
+    </div>
+  </div>
+</section>
+
+<div class="form-check form-switch mb-3">
+  <input class="form-check-input" type="checkbox" id="darkModeToggle" />
+  <label class="form-check-label" for="darkModeToggle">Dark Mode</label>
+</div>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<style>
+  body.dark-mode {
+    background-color: #121212;
+    color: #fff;
+  }
+
+  .card.dark-mode {
+    background-color: #1e1e1e;
+    color: #fff;
+    border-color: #333;
+  }
+
+  .card-header.dark-mode {
+    background-color: #2a2a2a;
+    color: #fff;
+    border-bottom-color: #333;
+  }
+
+  .btn-outline-secondary.dark-mode {
+    color: #fff;
+    border-color: #555;
+  }
+
+  .btn-outline-secondary.dark-mode:hover {
+    background-color: #333;
+    color: #fff;
+    border-color: #555;
+  }
+
+  .progress-bar.dark-mode {
+    background-color: #4caf50;
+  }
+
+  .alert-warning.dark-mode {
+    background-color: #262626;
+    border-color: #333;
+    color: #fff;
+  }
+  .is-invalid {
+    border-color: #dc3545;
+  }
+  .invalid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+    color: #dc3545;
+  }
+  .is-invalid ~ .invalid-feedback {
+    display: block;
+  }
+  .text-danger {
+    color: #dc3545 !important;
+  }
+</style>
+<script>
         document.addEventListener('DOMContentLoaded', function () {
             const adjustBudgetForm = document.getElementById('adjustBudgetForm');
             const adjustBudgetModal = new bootstrap.Modal(document.getElementById('adjustBudgetModal'));
@@ -244,6 +498,17 @@
             const buttons = document.querySelectorAll('.btn-outline-secondary');
             const progressBars = document.querySelectorAll('.progress-bar');
             const alerts = document.querySelectorAll('.alert-warning');
+            const addTransactionForm = document.getElementById('addTransactionForm');
+            const addTransactionModal = new bootstrap.Modal(document.getElementById('addTransactionModal'));
+            const transactionListBody = document.getElementById('transactionListBody');
+            const totalSpentDisplay = document.getElementById('totalSpentDisplay');
+            const transactionErrorAlert = document.getElementById('transactionErrorAlert');
+
+            function clearFormErrors(form) {
+                form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                form.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+                transactionErrorAlert.style.display = 'none'; // Hide general error alert
+            }
 
 
             adjustBudgetForm.addEventListener('submit', function (event) {
@@ -274,7 +539,7 @@
 
             addCategoryForm.addEventListener('submit', function (event) {
                 event.preventDefault();
-
+                clearFormErrors(addCategoryForm);
                 const formData = new FormData(addCategoryForm);
 
                 fetch(addCategoryForm.action, {
@@ -288,19 +553,20 @@
                     .then(data => {
                         if (data.status === 'success') {
                             // Create a new div element for the category
+                            const budgetCategoryContainer = document.getElementById('budgetCategoryContainer');
                             const newCategoryDiv = document.createElement('div');
                             newCategoryDiv.className = 'col';
-                            newCategoryDiv.id = `category-${data.category_id}`; // Use the ID from the response
+                            newCategoryDiv.id = `category-card-${data.category_id}`;
 
                             // Populate the div with the category data
                             newCategoryDiv.innerHTML = `
-                                <div class="card h-100">
+                               <div class="card h-100">
                                     <div class="card-body">
                                         <h5 class="card-title">${data.category_name}</h5>
-                                        <p class="card-text">Budget: $${data.category_limit}</p>
-                                        <p class="card-text">Spent: $${data.category_spent}</p>
+                                        <p class="card-text">Budget: $${parseFloat(data.category_limit).toFixed(2)}</p>
+                                        <p class="card-text">Spent: $<span id="category-spent-${data.category_id}">${parseFloat(data.category_spent).toFixed(2)}</span></p>
                                         <div class="progress">
-                                            <div class="progress-bar bg-info" style="width: 50%" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                            <div class="progress-bar bg-info" style="width: 0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -309,17 +575,150 @@
                             // Append the new div to the container
                             budgetCategoryContainer.appendChild(newCategoryDiv);
                             addCategoryModal.hide();
+                            addCategoryForm.reset();
+
+                            const transactionCategorySelect = document.getElementById('{{ template_data.transaction_form.category.id_for_label }}');
+                             if (transactionCategorySelect) {
+                                 const option = new Option(data.category_name, data.category_id);
+                                 transactionCategorySelect.add(option);
+                             }
 
                             if (parseFloat(data.category_spent) > parseFloat(data.category_limit)) {
                                 alert(`⚠️ You have spent more than your budget for ${data.category_name}!`);
                             }
                         } else {
-                            console.error('Error adding category:', data.error);
+                             console.error('Error adding category:', data.error, data.form_errors);
+                            if (data.form_errors) {
+                                for (const [field, message] of Object.entries(data.form_errors)) {
+                                    const inputElement = addCategoryForm.querySelector(`[name="${field}"]`);
+                                    const errorElement = addCategoryForm.querySelector(`#error_${field}`);
+                                    if (inputElement) {
+                                        inputElement.classList.add('is-invalid');
+                                    }
+                                    if (errorElement) {
+                                        errorElement.textContent = message;
+                                    }
+                                }
+                            } else {
+                                const categoryErrorAlert = document.getElementById('categoryErrorAlert');
+                                if(categoryErrorAlert) {
+                                     categoryErrorAlert.textContent = data.error || 'An unknown error occurred.';
+                                     categoryErrorAlert.style.display = 'block';
+                                }
+                            }
                         }
                     })
                     .catch(error => {
                         console.error('Fetch error:', error);
+                        const categoryErrorAlert = document.getElementById('categoryErrorAlert');
+                        if(categoryErrorAlert) {
+                             categoryErrorAlert.textContent = 'A network error occurred. Please try again.';
+                             categoryErrorAlert.style.display = 'block';
+                        }
                     });
+            });
+
+            addTransactionForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                clearFormErrors(addTransactionForm); // Clear previous errors
+
+                const formData = new FormData(addTransactionForm);
+
+                fetch(addTransactionForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest', // Important for Django to know it's AJAX
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken') // Pass CSRF token in header
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const categorySpentSpan = document.getElementById(`category-spent-${data.transaction.category_id}`);
+                        if (categorySpentSpan) {
+                            categorySpentSpan.textContent = data.updated_category_spent;
+                            // Optional: Update progress bar for the category here
+                        }
+
+                        if (totalSpentDisplay) {
+                            totalSpentDisplay.textContent = data.total_spent;
+                             // Optional: Update overall budget progress bar here
+                        }
+
+                        const newRow = document.createElement('tr');
+                        newRow.id = `transaction-row-${data.transaction.id}`;
+                        newRow.innerHTML = `
+                            <td>${data.transaction.date}</td>
+                            <td>${data.transaction.category_name}</td>
+                            <td>${data.transaction.description || '-'}</td>
+                            <td class="text-end text-danger">-$${data.transaction.amount}</td>
+                        `;
+                        transactionListBody.insertBefore(newRow, transactionListBody.firstChild);
+
+                        // Optional: Remove "No transactions" row if it exists
+                        const noTransactionRow = transactionListBody.querySelector('td[colspan="4"]');
+                        if (noTransactionRow) {
+                            noTransactionRow.closest('tr').remove();
+                        }
+
+                         let categoryIndex = chartCategories.indexOf(data.transaction.category_name);
+                         if (categoryIndex !== -1) {
+                             chartSpending[categoryIndex] = parseFloat(data.updated_category_spent);
+                         } else {
+                              // This case shouldn't happen if category exists, but jsut in case:
+                              // chartCategories.push(data.transaction.category_name);
+                              // chartSpending.push(parseFloat(data.updated_category_spent));
+                         }
+                         Plotly.react('moneyFlowChart', [{
+                             x: chartCategories,
+                             y: chartSpending,
+                             type: 'bar',
+                             width: 0.3,
+                             marker: { color: 'rgb(91, 192, 222)' }
+                         }], {
+                             title: 'Spending by Category',
+                             xaxis: { title: 'Category' },
+                             yaxis: { title: 'Amount Spent ($)' }
+                         });
+
+                        addTransactionForm.reset();
+                        addTransactionModal.hide();
+
+                    } else {
+                        console.error('Error adding transaction:', data.error, data.form_errors);
+                        // Handle form errors
+                        if (data.form_errors) {
+                             for (const [field, message] of Object.entries(data.form_errors)) {
+                                const inputElement = addTransactionForm.querySelector(`[name="${field}"], #${field}`);
+                                const errorElement = addTransactionForm.querySelector(`#error_${field}`);
+                                if (inputElement) {
+                                     if (inputElement.tagName === 'SELECT') {
+                                          inputElement.classList.add('is-invalid');
+                                     } else {
+                                         inputElement.classList.add('is-invalid');
+                                     }
+                                }
+                                if (errorElement) {
+                                    errorElement.textContent = message;
+                                    errorElement.style.display = 'block';
+                                }
+                            }
+                             if (data.error && !data.form_errors) {
+                                transactionErrorAlert.textContent = data.error;
+                                transactionErrorAlert.style.display = 'block';
+                             }
+                        } else {
+                            transactionErrorAlert.textContent = data.error || 'An unknown error occurred.';
+                            transactionErrorAlert.style.display = 'block';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                     transactionErrorAlert.textContent = 'A network error occurred. Please try again.';
+                     transactionErrorAlert.style.display = 'block';
+                });
             });
 
             // Function to toggle dark mode
@@ -352,38 +751,36 @@
 
     // Add chart data arrays
     let chartCategories = [];
-    let chartSpending = [];
-    {% for category in template_data.budget_categories %}
-    chartCategories.push("{{ category.name }}");
-    chartSpending.push({{ category.amount_spent }});
-    {% endfor %}
+           let chartSpending = [];
+           {% for category in template_data.budget_categories %}
+               chartCategories.push("{{ category.name }}");
+               chartSpending.push({{ category.amount_spent }});
+           {% endfor %}
     // Create the chart initially
     Plotly.newPlot('moneyFlowChart', [{
-        x: chartCategories,
-        y: chartSpending,
-        type: 'bar',
-        width: 0.3,
-        marker: { color: 'rgb(91, 192, 222)' }
-    }], {
-        title: 'Spending by Category',
-        xaxis: { title: 'Category' },
-        yaxis: { title: 'Amount Spent ($)' }
-    });
+               x: chartCategories,
+               y: chartSpending,
+               type: 'bar',
+               width: 0.3, // Adjust bar width as needed
+               marker: { color: 'rgb(91, 192, 222)' } // Bootstrap info color
+           }], {
+               title: 'Spending by Category',
+               xaxis: { title: 'Category' },
+               yaxis: { title: 'Amount Spent ($)', tickformat: '.2f' } // Format y-axis ticks as currency
+           }, {responsive: true}); // Make chart responsive
 
-    // Inside addCategoryForm fetch `.then(data => {...}` block:
-    if (data.status === 'success') {
-        // Existing DOM update code...
+  //   // Inside addCategoryForm fetch `.then(data => {...}` block:
+  //   if (data.status === 'success') {
+  //       // Existing DOM update code...
 
-        // Update the chart with new data
-        chartCategories.push(data.category_name);
-        chartSpending.push(data.category_spent);
+  //       // Update the chart with new data
+  //       chartCategories.push(data.category_name);
+  //       chartSpending.push(data.category_spent);
 
-        Plotly.update('moneyFlowChart', {
-            x: [chartCategories],
-            y: [chartSpending]
-        });
-    }
-
-
-    </script>
+  //       Plotly.update('moneyFlowChart', {
+  //           x: [chartCategories],
+  //           y: [chartSpending]
+  //       });
+  //   }
+</script>
 {% endblock content %}
