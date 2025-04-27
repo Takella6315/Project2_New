@@ -6,6 +6,8 @@ from .forms import AdjustBudgetForm, AddCategoryForm, TransactionForm
 from django.http import JsonResponse
 from django.core.files.storage import FileSystemStorage
 from django.db.models import F, Sum
+from django.utils import timezone
+import datetime
 
 
 
@@ -21,11 +23,36 @@ def index(request):
     template_data['budget_categories'] = budget_categories
     template_data['total_spent'] = sum(cat.amount_spent for cat in budget_categories)
 
-    recent_transactions = Transaction.objects.filter(user=request.user).order_by('-date', '-created_at')[:10] # Get last 10
+    recent_transactions = Transaction.objects.filter(user=request.user).order_by('-date', '-created_at')[:10]
     template_data['recent_transactions'] = recent_transactions
 
     transaction_form = TransactionForm(user=request.user)
     template_data['transaction_form'] = transaction_form
+
+    today = timezone.now().date()
+    start_of_week = today - datetime.timedelta(days=today.weekday()) # Monday = start of week
+    start_of_month = today.replace(day=1)
+
+    # Calculate Today's Spending
+    today_spending_agg = Transaction.objects.filter(
+        user=request.user,
+        date=today
+    ).aggregate(total=Sum('amount'))
+    template_data['today_spent'] = today_spending_agg['total'] or 0
+
+    week_spending_agg = Transaction.objects.filter(
+        user=request.user,
+        date__gte=start_of_week,
+        date__lte=today 
+    ).aggregate(total=Sum('amount'))
+    template_data['week_spent'] = week_spending_agg['total'] or 0
+
+    month_spending_agg = Transaction.objects.filter(
+        user=request.user,
+        date__gte=start_of_month,
+        date__lte=today 
+    ).aggregate(total=Sum('amount'))
+    template_data['month_spent'] = month_spending_agg['total'] or 0
 
     return render(request, 'dashboard/index.html', {'template_data': template_data})
 

@@ -346,29 +346,39 @@
   <h2>Overview</h2>
   <div class="row">
     <div class="col-md-4">
-      <div class="card">
+      <div class="card h-100">
         <div class="card-header">Today's Spending</div>
         <div class="card-body">
-          <p class="card-text">$XX.XX</p>
-          <button class="btn btn-sm btn-outline-secondary">
+          <p class="card-text fs-4" id="todaySpentDisplay">
+            ${{ template_data.today_spent|floatformat:2 }}
+          </p>
+          <button
+            class="btn btn-sm btn-outline-secondary mt-2"
+            data-bs-toggle="modal"
+            data-bs-target="#addTransactionModal"
+          >
             Add Transaction
           </button>
         </div>
       </div>
     </div>
     <div class="col-md-4">
-      <div class="card">
+      <div class="card h-100">
         <div class="card-header">This Week's Spending</div>
         <div class="card-body">
-          <p class="card-text">$YYY.YY</p>
+          <p class="card-text fs-4" id="weekSpentDisplay">
+            ${{ template_data.week_spent|floatformat:2 }}
+          </p>
         </div>
       </div>
     </div>
     <div class="col-md-4">
-      <div class="card">
+      <div class="card h-100">
         <div class="card-header">This Month's Spending</div>
         <div class="card-body">
-          <p class="card-text">$ZZZZ.ZZ</p>
+          <p class="card-text fs-4" id="monthSpentDisplay">
+            ${{ template_data.month_spent|floatformat:2 }}
+          </p>
         </div>
       </div>
     </div>
