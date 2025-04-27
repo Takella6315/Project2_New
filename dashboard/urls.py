@@ -7,4 +7,6 @@ urlpatterns = [
     path('add-transaction/', views.add_transaction, name='dashboard.add_transaction'),
     path('profile', views.profile, name='dashboard.profile'),
     path('upload-profile-picture/', views.upload_profile_picture, name='upload_profile_picture'),
+    path('category/<int:category_id>/delete/', views.delete_budget_category, name='delete_budget_category'),
+
 ]

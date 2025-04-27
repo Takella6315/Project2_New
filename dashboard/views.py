@@ -158,3 +158,37 @@ def upload_profile_picture(request):
         user_profile.save()
         return JsonResponse({'status': 'success', 'image_url': user_profile.profile_picture})
     return JsonResponse({'status': 'error', 'error': 'Invalid request'}, status=400)
+
+
+@login_required
+def delete_budget_category(request, category_id):
+
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Return a standard HTTP response or an error if accessed directly
+        return HttpResponseBadRequest("Invalid request type. AJAX required.")
+
+    try:
+        category = get_object_or_404(BudgetCategory, pk=category_id, user=request.user)
+
+        if Transaction.objects.filter(category=category).exists():
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Cannot delete category: It has associated transactions. Please reassign or delete them first.'
+            }, status=400) # 400 Bad Request is appropriate here
+
+        category_name = category.name # Store name for the success message
+        category.delete()
+
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Category "{category_name}" deleted successfully.'
+
+        })
+
+    except BudgetCategory.DoesNotExist:
+
+        return JsonResponse({'status': 'error', 'message': 'Category not found or you do not have permission to delete it.'}, status=404)
+    except Exception as e:
+
+        print(f"Error deleting category {category_id} for user {request.user.id}: {e}") # Basic print for development
+        return JsonResponse({'status': 'error', 'message': 'An unexpected server error occurred.'}, status=500)
