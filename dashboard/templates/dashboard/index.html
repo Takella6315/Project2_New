@@ -54,14 +54,7 @@
               >
                 Adjust Budget
               </button>
-
-              <div
-                class="alert alert-warning mt-2"
-                role="alert"
-                style="display: none"
-              >
-                Budget exceeded!
-              </div>
+              {# Removed redundant alert #}
             </div>
           </div>
         </div>
@@ -69,7 +62,6 @@
         {% for category in template_data.budget_categories %}
         <div class="col" id="category-card-{{ category.id }}">
           <div class="card h-100">
-            {# Added position-relative for the delete button positioning #}
             <div class="card-body position-relative">
               <h5 class="card-title">{{ category.name }}</h5>
               <p class="card-text">
@@ -85,9 +77,7 @@
                 ⚠️ Over Budget!
               </div>
               {% endif %}
-              {# Added margin-bottom to progress for spacing #}
               <div class="progress mb-4">
-                 {# Calculate percentage dynamically #}
                  {% with cat_percentage=0 %}
                     {% if category.budget_limit > 0 %}
                         {% widthratio category.amount_spent category.budget_limit 100 as cat_percentage %}
@@ -102,30 +92,27 @@
                     ></div>
                 {% endwith %}
               </div>
-              {# --- START: Added Trash Icon Button --- #}
               <button
                   type="button"
                   class="btn btn-sm btn-outline-danger delete-category-btn position-absolute bottom-0 end-0 mb-2 me-2"
                   data-category-id="{{ category.id }}"
-                  data-category-name="{{ category.name|escapejs }}" {# Use escapejs for names in data attributes #}
+                  data-category-name="{{ category.name|escapejs }}"
                   title="Delete Category"
               >
-                  {# Ensure Font Awesome is included in base.html #}
                   <i class="fa fa-trash"></i>
               </button>
-              {# --- END: Added Trash Icon Button --- #}
             </div>
           </div>
         </div>
         {% endfor %}
       </div>
-      {# Buttons outside the loop #}
+      {# Action Buttons #}
       <button
         class="btn btn-sm btn-primary mt-3"
         data-bs-toggle="modal"
         data-bs-target="#addCategoryModal"
       >
-        <i class="fa fa-plus me-1"></i> Add Category {# Added Icon #}
+        <i class="fa fa-plus me-1"></i> Add Category
       </button>
       <button
         class="btn btn-sm btn-success mt-3 ms-2"
@@ -159,11 +146,11 @@
         ></button>
       </div>
       <div class="modal-body">
-        {# Use the specific name from urls.py if namespaced, e.g., 'dashboard:adjust_budget' #}
+        {# Use namespaced URL name #}
         <form
           id="adjustBudgetForm"
           method="post"
-          action="{% url 'dashboard.adjust_budget' %}" {# Adjusted URL name assumption #}
+          action="{% url 'dashboard.adjust_budget' %}" {# Assuming 'dashboard' is your namespace #}
         >
           {% csrf_token %}
           <div class="mb-3">
@@ -176,8 +163,8 @@
               id="new_budget"
               name="new_budget"
               value="{{ template_data.monthly_budget|floatformat:2 }}"
-              step="0.01" {# Add step for currency #}
-              min="0" {# Prevent negative budget #}
+              step="0.01"
+              min="0"
               required
             />
             <div class="invalid-feedback" id="error_new_budget"></div>
@@ -216,10 +203,11 @@
       </div>
       <div class="modal-body">
          <div id="categoryErrorAlert" class="alert alert-danger" style="display: none;" role="alert"></div>
+         {# Use namespaced URL name #}
         <form
           id="addCategoryForm"
           method="post"
-          action="{% url 'dashboard.add_budget_category' %}" {# Adjusted URL name assumption #}
+          action="{% url 'dashboard.add_budget_category' %}" {# Assuming 'dashboard' is your namespace #}
         >
           {% csrf_token %}
           <div class="mb-3">
@@ -240,8 +228,8 @@
               class="form-control"
               id="category_limit"
               name="category_limit"
-              step="0.01" {# Add step for currency #}
-              min="0" {# Prevent negative limit #}
+              step="0.01"
+              min="0"
               required
             />
             <div class="invalid-feedback" id="error_category_limit"></div>
@@ -285,14 +273,13 @@
           style="display: none"
           role="alert"
         ></div>
-        {# Use the specific name from urls.py if namespaced, e.g., 'dashboard:add_transaction' #}
+         {# Use namespaced URL name #}
         <form
           id="addTransactionForm"
           method="post"
-          action="{% url 'dashboard.add_transaction' %}"
+          action="{% url 'dashboard.add_transaction' %}" {# Assuming 'dashboard' is your namespace #}
         >
           {% csrf_token %}
-          {# Assuming template_data.transaction_form is passed from the view #}
           {% if template_data.transaction_form %}
               <div class="mb-3">
                 <label
@@ -300,6 +287,7 @@
                   class="form-label"
                   >{{ template_data.transaction_form.category.label }}</label
                 >
+                {# Ensure select element has ID 'id_category' if that's what JS uses #}
                 {{ template_data.transaction_form.category }}
                 <div class="invalid-feedback" id="error_category"></div>
               </div>
@@ -345,7 +333,8 @@
   <div class="card">
       <div class="card-body">
           <p>Securely link your external bank accounts via Stripe to automatically sync transactions.</p>
-          <form action="{% url 'dashboard.connect_stripe' %}" method="post">
+           {# Use namespaced URL name #}
+          <form action="{% url 'dashboard.connect_stripe' %}" method="post"> {# Assuming 'dashboard' is your namespace #}
               {% csrf_token %}
               <button type="submit" class="btn btn-primary">
                   <i class="fab fa-stripe me-2"></i>Connect with Stripe
@@ -360,7 +349,7 @@
   <h2>Recent Transactions</h2>
   <div class="card">
     <div class="card-body">
-      <div class="table-responsive"> {# Make table responsive #}
+      <div class="table-responsive">
           <table class="table table-striped table-hover">
             <thead>
               <tr>
@@ -381,7 +370,7 @@
                 </td>
               </tr>
               {% empty %}
-              <tr id="no-transactions-row"> {# Add ID for easy removal #}
+              <tr id="no-transactions-row">
                 <td colspan="4" class="text-center">
                   No transactions recorded yet.
                 </td>
@@ -397,18 +386,17 @@
 <section class="mb-4">
   <h2>Overview</h2>
   <div class="row">
-    <div class="col-md-4 mb-3 mb-md-0"> {# Add bottom margin for small screens #}
+    <div class="col-md-4 mb-3 mb-md-0">
       <div class="card h-100">
         <div class="card-header">Today's Spending</div>
         <div class="card-body">
           <p class="card-text fs-4" id="todaySpentDisplay">
             ${{ template_data.today_spent|floatformat:2 }}
           </p>
-          {# Removed redundant button #}
         </div>
       </div>
     </div>
-    <div class="col-md-4 mb-3 mb-md-0"> {# Add bottom margin for small screens #}
+    <div class="col-md-4 mb-3 mb-md-0">
       <div class="card h-100">
         <div class="card-header">This Week's Spending</div>
         <div class="card-body">
@@ -436,18 +424,18 @@
   <div class="card">
     <div class="card-body">
       <div id="moneyFlowChart" style="width: 100%; height: 400px"></div>
-      {# Removed redundant button #}
-        <button class="btn btn-sm btn-outline-secondary mt-2">
+      <button class="btn btn-sm btn-outline-secondary mt-2">
         View Detailed Categories
       </button>
     </div>
   </div>
 </section>
 
-<section class="mb-4">
+<section class="mb-4" id="spendingHabitsReportSection"> {# Added ID for easier selection #}
   <h2>Spending Habits Report</h2>
   <div class="card">
     <div class="card-body">
+      {# Initial content for the report card #}
       <p>
         AI Insight: You spent significantly more on dining out last month
         compared to the previous month. {# Placeholder #}
@@ -456,9 +444,9 @@
         src="{% static 'img/money_flow_placeholder.png' %}"
         alt="Money Flow Placeholder"
         class="img-fluid"
-        onerror="this.style.display='none'" {# Hide if image fails #}
+        onerror="this.style.display='none'"
       />
-      <button class="btn btn-sm btn-outline-secondary mt-2">Generate Full Report</button>
+      <button class="btn btn-sm btn-outline-secondary mt-2 generate-report-btn">Generate Full Report</button>
       <button class="btn btn-sm btn-info mt-2">Input Income</button>
     </div>
   </div>
@@ -485,136 +473,44 @@
   <label class="form-check-label" for="darkModeToggle">Dark Mode</label>
 </div>
 
-{# Add Font Awesome if not already in base.html - example link: #}
+{# Add Font Awesome if not already in base.html #}
 {# <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"> #}
 
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 <style>
-  body.dark-mode {
-    background-color: #121212;
-    color: #e0e0e0; /* Lighter text for dark mode */
-  }
-
-  .card.dark-mode {
-    background-color: #1e1e1e;
-    color: #e0e0e0;
-    border-color: #333;
-  }
-
-  .card-header.dark-mode {
-    background-color: #2a2a2a;
-    color: #e0e0e0;
-    border-bottom-color: #333;
-  }
-
-  /* Ensure modals adapt */
-  .modal-content.dark-mode {
-     background-color: #1e1e1e;
-     color: #e0e0e0;
-  }
-   .modal-header.dark-mode {
-     border-bottom-color: #333;
-   }
-   .modal-footer.dark-mode {
-     border-top-color: #333;
-   }
-   .form-control.dark-mode, .form-select.dark-mode {
-      background-color: #2a2a2a;
-      color: #e0e0e0;
-      border-color: #444;
-   }
-    .form-control.dark-mode:focus, .form-select.dark-mode:focus {
-       background-color: #333;
-       color: #fff;
-       border-color: #86b7fe; /* Bootstrap focus color */
-       box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    }
-    .form-label.dark-mode {
-       color: #e0e0e0;
-    }
-    .btn-close.dark-mode {
-       filter: invert(1) grayscale(100%) brightness(200%);
-    }
-
-
-  .btn-outline-secondary.dark-mode {
-    color: #adb5bd; /* Lighter gray */
-    border-color: #555;
-  }
-
-  .btn-outline-secondary.dark-mode:hover {
-    background-color: #333;
-    color: #fff;
-    border-color: #555;
-  }
-
-  .progress-bar.dark-mode {
-    /* Keep bootstrap colors or define custom dark mode colors */
-    /* Example: Use a slightly lighter shade for dark mode */
-     /* background-color: #5cb85c; */ /* Lighter green */
-  }
-  .progress-bar.bg-info.dark-mode {
-     /* background-color: #5bc0de; */ /* Lighter info */
-  }
-   .progress-bar.bg-warning.dark-mode {
-     /* background-color: #f0ad4e; */ /* Lighter warning */
-  }
-    .progress-bar.bg-danger.dark-mode {
-     /* background-color: #d9534f; */ /* Lighter danger */
-  }
-
-
-  .alert-warning.dark-mode {
-    background-color: #332701; /* Darker warning bg */
-    border-color: #ffc107;
-    color: #ffc107; /* Warning text color */
-  }
-  .table.dark-mode {
-     color: #e0e0e0;
-     border-color: #333;
-  }
-  .table-striped.dark-mode tbody tr:nth-of-type(odd) {
-      background-color: rgba(255, 255, 255, 0.05);
-  }
-   .table-hover.dark-mode tbody tr:hover {
-       background-color: rgba(255, 255, 255, 0.075);
-   }
-
-
-  .is-invalid {
-    border-color: #dc3545 !important; /* Ensure override */
-  }
-  .invalid-feedback {
-    display: none; /* Correctly hidden by default */
-    width: 100%;
-    margin-top: 0.25rem;
-    font-size: 0.875em;
-    color: #dc3545;
-  }
-  /* Ensure feedback shows with Bootstrap 5 for inputs and selects */
-  .form-control.is-invalid ~ .invalid-feedback,
-  .form-select.is-invalid ~ .invalid-feedback {
-    display: block;
-  }
-  .text-danger {
-    color: #dc3545 !important;
-  }
-  /* Prevent icon inside delete button from capturing clicks */
-  .delete-category-btn i {
-    pointer-events: none;
- }
+  body.dark-mode { background-color: #121212; color: #e0e0e0; }
+  .card.dark-mode { background-color: #1e1e1e; color: #e0e0e0; border-color: #333; }
+  .card-header.dark-mode { background-color: #2a2a2a; color: #e0e0e0; border-bottom-color: #333; }
+  .modal-content.dark-mode { background-color: #1e1e1e; color: #e0e0e0; }
+  .modal-header.dark-mode { border-bottom-color: #333; }
+  .modal-footer.dark-mode { border-top-color: #333; }
+  .form-control.dark-mode, .form-select.dark-mode { background-color: #2a2a2a; color: #e0e0e0; border-color: #444; }
+  .form-control.dark-mode:focus, .form-select.dark-mode:focus { background-color: #333; color: #fff; border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
+  .form-label.dark-mode { color: #e0e0e0; }
+  .btn-close.dark-mode { filter: invert(1) grayscale(100%) brightness(200%); }
+  .btn-outline-secondary.dark-mode { color: #adb5bd; border-color: #555; }
+  .btn-outline-secondary.dark-mode:hover { background-color: #333; color: #fff; border-color: #555; }
+  .progress-bar.dark-mode { /* Optional custom dark styles */ }
+  .alert-warning.dark-mode { background-color: #332701; border-color: #ffc107; color: #ffc107; }
+  .table.dark-mode { color: #e0e0e0; border-color: #333; }
+  .table-striped.dark-mode tbody tr:nth-of-type(odd) { background-color: rgba(255, 255, 255, 0.05); }
+  .table-hover.dark-mode tbody tr:hover { background-color: rgba(255, 255, 255, 0.075); }
+  .is-invalid { border-color: #dc3545 !important; }
+  .invalid-feedback { display: none; width: 100%; margin-top: 0.25rem; font-size: 0.875em; color: #dc3545; }
+  .form-control.is-invalid ~ .invalid-feedback, .form-select.is-invalid ~ .invalid-feedback { display: block; }
+  .text-danger { color: #dc3545 !important; }
+  .delete-category-btn i { pointer-events: none; }
 </style>
 
 <script>
-    // Helper function to get CSRF token from cookies
+    // --- Helper Functions (Defined Globally within Script Tag) ---
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
             const cookies = document.cookie.split(';');
             for (let i = 0; i < cookies.length; i++) {
                 const cookie = cookies[i].trim();
-                // Does this cookie string begin with the name we want?
                 if (cookie.substring(0, name.length + 1) === (name + '=')) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
@@ -625,409 +521,491 @@
     }
     const csrftoken = getCookie('csrftoken'); // Get CSRF token once
 
-    // Wait for the DOM to be fully loaded before running scripts
-    document.addEventListener('DOMContentLoaded', function() {
-            // Find the "Generate Full Report" button
-            const reportButtons = document.querySelectorAll('button');
-            let generateReportBtn = null;
-            
-            for (let btn of reportButtons) {
-                if (btn.textContent.trim() === 'Generate Full Report') {
-                    generateReportBtn = btn;
-                    break;
-                }
-            }
-            
-            if (generateReportBtn) {
-                // Add click event listener
-                generateReportBtn.addEventListener('click', handleGenerateReport);
-                console.log("Event listener attached to Generate Full Report button");
-            } else {
-                console.error("Could not find Generate Full Report button");
-            }
+    function clearFormErrors(form) {
+        if (!form) return;
+        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        form.querySelectorAll('.invalid-feedback').forEach(el => {
+            el.textContent = '';
+            el.style.display = 'none';
         });
-        
-        // Handle the generate report button click
-        async function handleGenerateReport() {
-            console.log("Generate Report button clicked!");
-            
-            // Find the report section (the parent of the button)
-            const reportSection = findSpendingHabitsSection();
-            if (!reportSection) {
-                console.error("Could not find Spending Habits Report section");
-                return;
-            }
-            
-            const reportCardBody = reportSection.querySelector('.card-body');
-            if (!reportCardBody) {
-                console.error("Could not find card body in Spending Habits Report section");
-                return;
-            }
-            
-            // Save original content to restore later if needed
-            const originalContent = reportCardBody.innerHTML;
-            
-            // Show loading spinner
+        const transactionErrorAlert = document.getElementById('transactionErrorAlert');
+        const categoryErrorAlert = document.getElementById('categoryErrorAlert');
+        if(transactionErrorAlert) transactionErrorAlert.style.display = 'none';
+        if(categoryErrorAlert) categoryErrorAlert.style.display = 'none';
+    }
+
+    function handleFormErrors(form, formErrors, errorAlertElement, generalError) {
+         if (!form) return;
+         clearFormErrors(form);
+         let firstErrorField = null;
+         if (formErrors) {
+             for (const [field, messages] of Object.entries(formErrors)) {
+                 const inputElement = form.querySelector(`[name="${field}"], #id_${field}`); // Common patterns
+                 let feedbackElement = null;
+                 if (inputElement) {
+                    feedbackElement = inputElement.nextElementSibling; // Check sibling first
+                    if (!feedbackElement || !feedbackElement.classList.contains('invalid-feedback')) {
+                       feedbackElement = form.querySelector(`#error_${field}`); // Fallback to specific ID
+                    }
+                    inputElement.classList.add('is-invalid');
+                    if (!firstErrorField) firstErrorField = inputElement;
+                    if (feedbackElement && messages.length > 0) {
+                       feedbackElement.textContent = messages[0];
+                       feedbackElement.style.display = 'block';
+                    }
+                 } else if (field === '__all__') { // Handle Django's non-field errors
+                     generalError = (generalError ? generalError + '<br>' : '') + messages.join('<br>');
+                 } else {
+                     console.warn(`Could not find input element for field: ${field}`);
+                 }
+             }
+         }
+         if (generalError) {
+             if (errorAlertElement) {
+                 errorAlertElement.innerHTML = generalError; // Use innerHTML for potential <br>
+                 errorAlertElement.style.display = 'block';
+             } else {
+                 alert(`Error: ${generalError}`); // Fallback alert
+             }
+         }
+    }
+
+    function updateCategoryCardDisplay(categoryId, newSpentStr, budgetLimitStr) {
+         const categorySpentSpan = document.getElementById(`category-spent-${categoryId}`);
+         const categoryCard = document.getElementById(`category-card-${categoryId}`);
+         if (!categorySpentSpan || !categoryCard) return;
+         const newSpent = parseFloat(newSpentStr);
+         const budgetLimit = parseFloat(budgetLimitStr);
+         categorySpentSpan.textContent = newSpent.toFixed(2);
+         const progressBar = categoryCard.querySelector('.progress-bar');
+         if (progressBar) {
+             const percentage = budgetLimit > 0 ? Math.min(100, (newSpent / budgetLimit) * 100) : (newSpent > 0 ? 100 : 0); // Handle 0 budget
+             const percentageInt = Math.round(percentage);
+             progressBar.style.width = `${percentage}%`;
+             progressBar.setAttribute('aria-valuenow', percentageInt);
+             progressBar.classList.remove('bg-info', 'bg-success', 'bg-warning', 'bg-danger');
+             if (newSpent > budgetLimit && budgetLimit > 0) { // Only show danger if limit > 0
+                 progressBar.classList.add('bg-danger');
+                 progressBar.style.width = '100%'; // Cap visual width
+             } else if (percentage > 85) {
+                 progressBar.classList.add('bg-warning');
+             } else {
+                 progressBar.classList.add('bg-info'); // Default color
+             }
+         }
+         let warningAlert = categoryCard.querySelector('.alert-warning');
+         if (newSpent > budgetLimit && budgetLimit > 0) { // Check budgetLimit > 0 before showing warning
+             if (!warningAlert) {
+                 const newAlert = document.createElement('div');
+                 newAlert.className = 'alert alert-warning mt-2';
+                 newAlert.setAttribute('role', 'alert');
+                 newAlert.innerHTML = '⚠️ Over Budget!';
+                 const spentP = categorySpentSpan.closest('p');
+                 if (spentP) spentP.parentNode.insertBefore(newAlert, spentP.nextSibling);
+                 if (document.body.classList.contains('dark-mode')) {
+                     applyDarkModeStyles(newAlert);
+                 }
+             }
+         } else {
+             if (warningAlert) {
+                 warningAlert.remove();
+             }
+         }
+    }
+
+    function applyDarkModeStyles(element) {
+         if (!element) return;
+         const isDarkModeActive = document.body.classList.contains('dark-mode');
+         // Card elements
+         if (element.matches && element.matches('.card')) {
+             element.classList.toggle('dark-mode', isDarkModeActive);
+             element.querySelector('.card-header')?.classList.toggle('dark-mode', isDarkModeActive);
+             element.querySelectorAll('.btn-outline-secondary').forEach(btn => btn.classList.toggle('dark-mode', isDarkModeActive));
+             element.querySelectorAll('.progress-bar').forEach(bar => bar.classList.toggle('dark-mode', isDarkModeActive));
+             element.querySelectorAll('.alert-warning').forEach(alert => alert.classList.toggle('dark-mode', isDarkModeActive));
+         }
+         // Specific alert element
+         else if (element.matches && element.matches('.alert-warning')) {
+            element.classList.toggle('dark-mode', isDarkModeActive);
+         }
+         // Modal elements
+         else if (element.matches && element.matches('.modal')) {
+             element.querySelector('.modal-content')?.classList.toggle('dark-mode', isDarkModeActive);
+             element.querySelector('.modal-header')?.classList.toggle('dark-mode', isDarkModeActive);
+             element.querySelector('.modal-footer')?.classList.toggle('dark-mode', isDarkModeActive);
+             element.querySelectorAll('.form-control, .form-select').forEach(input => input.classList.toggle('dark-mode', isDarkModeActive));
+             element.querySelectorAll('.form-label').forEach(label => label.classList.toggle('dark-mode', isDarkModeActive));
+             element.querySelector('.btn-close')?.classList.toggle('dark-mode', isDarkModeActive);
+         }
+         // Table rows
+         else if (element.tagName === 'TR') {
+              element.classList.toggle('dark-mode-row', isDarkModeActive); // Example custom class
+         }
+    }
+
+    // --- Plotly Chart Setup (Variables accessible within script) ---
+    let plotLayout = {
+        title: 'Spending by Category',
+        xaxis: { title: 'Category', automargin: true },
+        yaxis: { title: 'Amount Spent ($)', tickformat: '.2f', automargin: true },
+        margin: { l: 60, r: 20, t: 40, b: 80 }, // Adjust margins as needed
+        paper_bgcolor: '#fff', plot_bgcolor: '#fff', font: { color: '#000' } // Light mode defaults
+    };
+    let chartCategories = [];
+    let chartSpending = [];
+    let chartData = [{ x: chartCategories, y: chartSpending, type: 'bar', width: 0.3, marker: { color: 'rgb(91, 192, 222)' } }];
+
+    function toggleDarkMode() {
+        const isDarkMode = document.body.classList.toggle('dark-mode');
+        // Toggle classes on static elements
+        document.querySelectorAll('.card').forEach(el => el.classList.toggle('dark-mode', isDarkMode));
+        document.querySelectorAll('.card-header').forEach(el => el.classList.toggle('dark-mode', isDarkMode));
+        document.querySelectorAll('.modal').forEach(applyDarkModeStyles); // Apply to all modals
+        document.querySelectorAll('.table').forEach(el => el.classList.toggle('dark-mode', isDarkMode));
+        document.querySelectorAll('.btn-outline-secondary').forEach(el => el.classList.toggle('dark-mode', isDarkMode));
+        document.querySelectorAll('.progress-bar').forEach(el => el.classList.toggle('dark-mode', isDarkMode));
+        document.querySelectorAll('.alert-warning').forEach(el => el.classList.toggle('dark-mode', isDarkMode));
+        // Add other static elements that need toggling
+
+        // Update Plotly chart layout
+        plotLayout.paper_bgcolor = isDarkMode ? '#1e1e1e' : '#fff';
+        plotLayout.plot_bgcolor = isDarkMode ? '#1e1e1e' : '#fff';
+        plotLayout.font.color = isDarkMode ? '#e0e0e0' : '#000';
+        const moneyFlowChartDiv = document.getElementById('moneyFlowChart');
+        if (moneyFlowChartDiv && typeof Plotly !== 'undefined') {
+            Plotly.react(moneyFlowChartDiv, chartData, plotLayout); // Use react to update layout
+        }
+        // Store preference
+        localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
+    }
+
+    // --- Functions for Generate Report ---
+    function findSpendingHabitsSection() {
+        // Use the ID added to the section for reliability
+        return document.getElementById('spendingHabitsReportSection');
+    }
+
+    function collectBudgetData() {
+        const budgetDisplayEl = document.querySelector('.budget-display');
+        const totalSpentEl = document.getElementById('totalSpentDisplay'); // Correct ID
+
+        const monthlyBudgetText = budgetDisplayEl ? budgetDisplayEl.textContent : 'Budget: $0';
+        const monthlyBudget = parseFloat(monthlyBudgetText.replace(/[^0-9.]/g, '')) || 0;
+
+        const totalSpentText = totalSpentEl ? totalSpentEl.textContent : '0';
+        const totalSpent = parseFloat(totalSpentText.replace(/[^0-9.]/g, '')) || 0;
+
+        const categories = [];
+        const categoryContainer = document.getElementById('budgetCategoryContainer');
+        if (categoryContainer) {
+            // Select category cards more reliably by checking for delete button presence
+            const categoryCards = categoryContainer.querySelectorAll('.col .card');
+
+            categoryCards.forEach(card => {
+                 // Skip the main budget card (which doesn't have a delete button)
+                 if (!card.querySelector('.delete-category-btn')) {
+                     return;
+                 }
+
+                 const cardBody = card.querySelector('.card-body');
+                 if (!cardBody) return;
+
+                 const titleElement = cardBody.querySelector('.card-title');
+                 const budgetPara = Array.from(cardBody.querySelectorAll('p.card-text')).find(p => p.textContent.includes('Budget:'));
+                 const spentPara = Array.from(cardBody.querySelectorAll('p.card-text')).find(p => p.textContent.includes('Spent:'));
+                 const spentSpan = spentPara?.querySelector('span[id^="category-spent-"]'); // Find the span inside
+
+                 if (titleElement && budgetPara && spentSpan) {
+                     const name = titleElement.textContent.trim();
+                     const budget = parseFloat(budgetPara.textContent.replace(/[^0-9.]/g, '')) || 0;
+                     const spent = parseFloat(spentSpan.textContent.replace(/[^0-9.]/g, '')) || 0;
+
+                     categories.push({
+                         name: name,
+                         budget: budget,
+                         spent: spent,
+                         over_budget: budget > 0 && spent > budget,
+                         percentage: budget > 0 ? (spent / budget) * 100 : (spent > 0 ? Infinity : 0)
+                     });
+                 }
+            });
+        }
+        return { monthly_budget: monthlyBudget, total_spent: totalSpent, remaining: monthlyBudget - totalSpent, over_budget: totalSpent > monthlyBudget, categories: categories };
+    }
+
+    function generateMockReport(budgetData) {
+        const overBudget = budgetData.total_spent > budgetData.monthly_budget;
+        const budgetStatus = overBudget ?
+            `<div class="alert alert-danger small">You are $${(budgetData.total_spent - budgetData.monthly_budget).toFixed(2)} over budget this month!</div>` :
+            `<div class="alert alert-success small">You have $${(budgetData.monthly_budget - budgetData.total_spent).toFixed(2)} remaining.</div>`;
+        const budgetPercentage = budgetData.monthly_budget > 0 ? Math.min(Math.round((budgetData.total_spent / budgetData.monthly_budget) * 100), 100) : (budgetData.total_spent > 0 ? 100 : 0);
+        const progressBarColor = overBudget ? 'bg-danger' : (budgetPercentage > 85 ? 'bg-warning' : 'bg-success'); // Adjusted threshold
+        const progressBar = `<div class="progress mb-3" style="height: 20px;"><div class="progress-bar ${progressBarColor}" role="progressbar" style="width: ${budgetPercentage}%" aria-valuenow="${budgetPercentage}" aria-valuemin="0" aria-valuemax="100">${budgetPercentage}% Used</div></div>`;
+
+        let categoryAnalysis = '';
+        let recommendations = '';
+        if (budgetData.categories.length === 0) {
+            categoryAnalysis = '<p>No budget categories found.</p>';
+        } else {
+            const sortedCategories = [...budgetData.categories].sort((a, b) => b.percentage - a.percentage);
+            categoryAnalysis = '<div class="row g-3">'; // Use g-3 for gutter
+            sortedCategories.forEach(category => {
+                const percentage = category.budget > 0 ? Math.min(Math.round(category.percentage), 100) : (category.spent > 0 ? 100 : 0);
+                const cardClass = category.over_budget ? 'border-danger' : (percentage > 85 ? 'border-warning' : ''); // Removed success border
+                const barColor = category.over_budget ? 'bg-danger' : (percentage > 85 ? 'bg-warning' : 'bg-info'); // Use info as default
+                const overAmount = category.over_budget ? ` <span class="text-danger small">(Over by $${(category.spent - category.budget).toFixed(2)})</span>` : '';
+
+                categoryAnalysis += `
+                    <div class="col-md-6">
+                        <div class="card ${cardClass} h-100 shadow-sm">
+                            <div class="card-body d-flex flex-column">
+                                <h6 class="card-title mb-1">${category.name}${overAmount}</h6>
+                                <p class="card-text small text-muted mb-2">Budget: $${category.budget.toFixed(2)} / Spent: $${category.spent.toFixed(2)}</p>
+                                <div class="progress mt-auto" style="height: 8px;"> <div class="progress-bar ${barColor}" role="progressbar" style="width: ${percentage}%" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100"></div> </div>
+                                <p class="card-text small text-center text-muted mt-1 mb-0">${percentage}% Spent</p>
+                            </div>
+                        </div>
+                    </div>`;
+                // Recommendations
+                if (category.over_budget) { recommendations += `<li class="list-group-item list-group-item-danger small">Review <strong>${category.name}</strong> spending. You're $${(category.spent - category.budget).toFixed(2)} over budget.</li>`; }
+                else if (percentage > 85) { recommendations += `<li class="list-group-item list-group-item-warning small">Spending in <strong>${category.name}</strong> is high (${percentage}%). $${(category.budget - category.spent).toFixed(2)} remaining.</li>`; }
+            });
+            categoryAnalysis += '</div>';
+            if (recommendations === '') { recommendations = '<li class="list-group-item list-group-item-success small">Great job staying within budget in all categories!</li>'; }
+            recommendations += `<li class="list-group-item small">Consider setting up automatic savings transfers.</li>`;
+            recommendations += `<li class="list-group-item small">Review subscriptions for potential savings.</li>`;
+        }
+        return `<div class="report-section mb-4"><h5>Overall Budget Health</h5>${budgetStatus}${progressBar}</div><div class="report-section mb-4"><h5>Category Breakdown</h5>${categoryAnalysis}</div><div class="report-section"><h5>Recommendations</h5><ul class="list-group list-group-flush">${recommendations}</ul></div>`;
+    }
+
+    function downloadReport(reportContent) {
+         const htmlContent = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Personal Spending Report</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"><style>body { padding: 20px; }.report-header { margin-bottom: 20px; text-align: center; }.report-date { margin-bottom: 20px; text-align: right; color: #666; }</style></head><body><div class="container py-4"><div class="report-header"><h1>Personal Spending Report</h1><p class="report-date">Generated on ${new Date().toLocaleDateString()}</p></div><div class="report-content">${reportContent}</div></div></body></html>`;
+         const blob = new Blob([htmlContent], { type: 'text/html' });
+         const url = URL.createObjectURL(blob);
+         const a = document.createElement('a');
+         a.href = url;
+         a.download = `spending-report-${new Date().toISOString().slice(0, 10)}.html`;
+         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    async function handleGenerateReport() {
+        console.log("Generate Report button clicked!");
+        const reportSection = findSpendingHabitsSection(); // Use updated function
+        if (!reportSection) { console.error("Could not find Spending Habits Report section"); return; }
+        const reportCardBody = reportSection.querySelector('.card-body');
+        if (!reportCardBody) { console.error("Could not find card body"); return; }
+
+        const originalContent = reportCardBody.innerHTML; // Save original state
+        // Show loading spinner more prominently
+        reportCardBody.innerHTML = `<div class="text-center p-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2 mb-0">Generating report...</p></div>`;
+
+        try {
+            const budgetData = collectBudgetData(); // Use updated function
+            console.log("Budget data collected:", budgetData);
+            const reportHTML = generateMockReport(budgetData); // Use updated function
+
+            await new Promise(resolve => setTimeout(resolve, 1200)); // Simulate delay
+
+            // Display the report
             reportCardBody.innerHTML = `
-                <div class="text-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2">Generating your personalized spending report...</p>
-                    <p class="text-muted small">This may take a moment...</p>
-                </div>
-            `;
-            
-            try {
-                // Collect budget data
-                const budgetData = collectBudgetData();
-                console.log("Budget data collected:", budgetData);
-                
-                // Generate mock report (no API needed)
-                const reportHTML = generateMockReport(budgetData);
-                
-                // Simulate loading delay
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                
-                // Display the report
-                reportCardBody.innerHTML = `
-                    <h4 class="mb-3">Your Personalized Spending Report</h4>
-                    <div class="report-content mb-3">
-                        ${reportHTML}
-                    </div>
-                    <div class="d-flex justify-content-between mt-3">
-                        <button class="btn btn-sm btn-outline-secondary close-report-btn">Close Report</button>
-                        <button class="btn btn-sm btn-primary download-report-btn">Download Report</button>
-                    </div>
-                `;
-                
-                // Add event listeners to new buttons
-                reportCardBody.querySelector('.close-report-btn').addEventListener('click', function() {
-                    reportCardBody.innerHTML = originalContent;
-                    
-                    // Re-find the report button and re-attach event listener
-                    setTimeout(() => {
-                        const newButtons = reportCardBody.querySelectorAll('button');
-                        for (let btn of newButtons) {
-                            if (btn.textContent.trim() === 'Generate Full Report') {
-                                btn.addEventListener('click', handleGenerateReport);
-                                break;
-                            }
-                        }
-                    }, 100);
-                });
-                
-                reportCardBody.querySelector('.download-report-btn').addEventListener('click', function() {
-                    downloadReport(reportHTML);
-                });
-                
-            } catch (error) {
-                console.error("Error:", error);
-                
-                // Show error message
-                reportCardBody.innerHTML = `
-                    <div class="alert alert-danger">
-                        <h5>Error Generating Report</h5>
-                        <p>${error.message || "Unknown error occurred"}</p>
-                    </div>
-                    <div class="mt-3">
-                        <button class="btn btn-sm btn-outline-secondary try-again-btn">Try Again</button>
-                        <button class="btn btn-sm btn-outline-secondary ms-2 cancel-btn">Cancel</button>
-                    </div>
-                `;
-                
-                // Add event listeners to error buttons
-                reportCardBody.querySelector('.try-again-btn').addEventListener('click', function() {
-                    handleGenerateReport();
-                });
-                
-                reportCardBody.querySelector('.cancel-btn').addEventListener('click', function() {
-                    reportCardBody.innerHTML = originalContent;
-                    
-                    // Re-find the report button and re-attach event listener
-                    setTimeout(() => {
-                        const newButtons = reportCardBody.querySelectorAll('button');
-                        for (let btn of newButtons) {
-                            if (btn.textContent.trim() === 'Generate Full Report') {
-                                btn.addEventListener('click', handleGenerateReport);
-                                break;
-                            }
-                        }
-                    }, 100);
-                });
-            }
+                <h5 class="card-title">Personalized Spending Report</h5>
+                <div class="report-content mb-3">${reportHTML}</div>
+                <div class="d-flex justify-content-between mt-3">
+                    <button class="btn btn-sm btn-outline-secondary close-report-btn">Close Report</button>
+                    <button class="btn btn-sm btn-primary download-report-btn">Download Report</button>
+                </div>`;
+
+            // Add event listeners to new buttons within the updated card body
+            reportCardBody.querySelector('.close-report-btn')?.addEventListener('click', () => {
+                reportCardBody.innerHTML = originalContent;
+                // Re-attach listener to the original button if it exists in originalContent
+                reportCardBody.querySelector('.generate-report-btn')?.addEventListener('click', handleGenerateReport);
+            });
+            reportCardBody.querySelector('.download-report-btn')?.addEventListener('click', () => downloadReport(reportHTML));
+
+        } catch (error) {
+            console.error("Error generating report:", error);
+            reportCardBody.innerHTML = `<div class="alert alert-danger"><h5>Error</h5><p>${error.message || "Could not generate report."}</p></div><button class="btn btn-sm btn-outline-secondary close-report-btn">Close</button>`;
+            // Add listener to close button in error state
+            reportCardBody.querySelector('.close-report-btn')?.addEventListener('click', () => {
+                 reportCardBody.innerHTML = originalContent;
+                 reportCardBody.querySelector('.generate-report-btn')?.addEventListener('click', handleGenerateReport);
+            });
         }
-        
-        // Find the spending habits section
-        function findSpendingHabitsSection() {
-            const sections = document.querySelectorAll('section');
-            for (let section of sections) {
-                const heading = section.querySelector('h2');
-                if (heading && heading.textContent.includes('Spending Habits Report')) {
-                    return section;
-                }
-            }
-            return null;
+    }
+
+
+    // --- DOMContentLoaded Initialization ---
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // --- Cache DOM Elements ---
+        const adjustBudgetForm = document.getElementById('adjustBudgetForm');
+        const adjustBudgetModalEl = document.getElementById('adjustBudgetModal');
+        const adjustBudgetModal = adjustBudgetModalEl ? new bootstrap.Modal(adjustBudgetModalEl) : null;
+        const budgetDisplay = document.querySelector('.budget-display');
+
+        const addCategoryForm = document.getElementById('addCategoryForm');
+        const addCategoryModalEl = document.getElementById('addCategoryModal');
+        const addCategoryModal = addCategoryModalEl ? new bootstrap.Modal(addCategoryModalEl) : null;
+        const categoryErrorAlert = document.getElementById('categoryErrorAlert');
+
+        const budgetCategoryContainer = document.getElementById('budgetCategoryContainer');
+
+        const addTransactionForm = document.getElementById('addTransactionForm');
+        const addTransactionModalEl = document.getElementById('addTransactionModal');
+        const addTransactionModal = addTransactionModalEl ? new bootstrap.Modal(addTransactionModalEl) : null;
+        const transactionListBody = document.getElementById('transactionListBody');
+        const totalSpentDisplay = document.getElementById('totalSpentDisplay');
+        const transactionErrorAlert = document.getElementById('transactionErrorAlert');
+        const transactionCategorySelect = document.getElementById('id_category'); // Verify this ID
+
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const moneyFlowChartDiv = document.getElementById('moneyFlowChart');
+
+        // --- Initialize Chart Data ---
+        chartCategories = []; // Reset arrays
+        chartSpending = [];
+        {% for category in template_data.budget_categories %}
+            chartCategories.push("{{ category.name|escapejs }}");
+            chartSpending.push({{ category.amount_spent|default:0 }});
+        {% endfor %}
+        chartData = [{ x: chartCategories, y: chartSpending, type: 'bar', width: 0.3, marker: { color: 'rgb(91, 192, 222)' } }];
+
+        // --- Initial Chart Plotting ---
+        if (moneyFlowChartDiv && typeof Plotly !== 'undefined'){
+             const isInitiallyDark = localStorage.getItem('darkMode') === 'enabled';
+             plotLayout.paper_bgcolor = isInitiallyDark ? '#1e1e1e' : '#fff';
+             plotLayout.plot_bgcolor = isInitiallyDark ? '#1e1e1e' : '#fff';
+             plotLayout.font.color = isInitiallyDark ? '#e0e0e0' : '#000';
+             Plotly.newPlot(moneyFlowChartDiv, chartData, plotLayout, {responsive: true});
+        } else if (typeof Plotly === 'undefined') {
+             console.error("Plotly library not loaded.");
         }
-        
-        // Collect budget data from the dashboard
-        function collectBudgetData() {
-            // Get monthly budget
-            const budgetDisplay = document.querySelector('.budget-display');
-            const totalSpentElement = document.getElementById('totalSpent');
-            
-            const monthlyBudgetText = budgetDisplay ? budgetDisplay.textContent : '';
-            const monthlyBudget = parseFloat(monthlyBudgetText.replace('Budget: $', '')) || 0;
-            
-            const totalSpent = totalSpentElement ? parseFloat(totalSpentElement.textContent) || 0 : 0;
-            
-            // Get categories
-            const categories = [];
-            const categoryElements = document.querySelectorAll('[id^="category-"]');
-            
-            categoryElements.forEach(element => {
-                const titleElement = element.querySelector('.card-title');
-                const budgetElement = element.querySelector('.card-text:nth-of-type(1)');
-                const spentElement = element.querySelector('.card-text:nth-of-type(2)');
-                
-                if (titleElement && budgetElement && spentElement) {
-                    const name = titleElement.textContent.trim();
-                    const budget = parseFloat(budgetElement.textContent.replace('Budget: $', '')) || 0;
-                    const spent = parseFloat(spentElement.textContent.replace('Spent: $', '')) || 0;
-                    
-                    categories.push({
-                        name: name,
-                        budget: budget,
-                        spent: spent,
-                        over_budget: spent > budget,
-                        percentage: budget > 0 ? (spent / budget) * 100 : 0
-                    });
+
+        // --- Event Listeners ---
+
+        // Adjust Monthly Budget
+        if (adjustBudgetForm && adjustBudgetModal) {
+            adjustBudgetForm.addEventListener('submit', function (event) {
+                 event.preventDefault();
+                 clearFormErrors(adjustBudgetForm);
+                 const formData = new FormData(adjustBudgetForm);
+                 fetch(adjustBudgetForm.action, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrftoken } })
+                 .then(response => { if (!response.ok) { return response.json().then(errData => { throw { status: response.status, data: errData }; }); } return response.json(); })
+                 .then(data => {
+                     if (data.status === 'success') {
+                         if (budgetDisplay) { budgetDisplay.textContent = `Budget: $${parseFloat(data.new_budget).toFixed(2)}`; }
+                         adjustBudgetModal.hide();
+                     } else { handleFormErrors(adjustBudgetForm, data.form_errors, null, data.error); }
+                 })
+                 .catch(error => { console.error('Adjust Budget Fetch Error:', error); const msg = error?.data?.error || error?.data?.message || 'A network or server error occurred.'; handleFormErrors(adjustBudgetForm, error?.data?.form_errors, null, msg); });
+            });
+        }
+
+        // Add Category
+        if (addCategoryForm && addCategoryModal && budgetCategoryContainer) {
+            addCategoryForm.addEventListener('submit', function (event) {
+                event.preventDefault(); clearFormErrors(addCategoryForm); const formData = new FormData(addCategoryForm);
+                fetch(addCategoryForm.action, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrftoken } })
+                .then(response => { if (!response.ok) { return response.json().then(errData => { throw { status: response.status, data: errData }; }); } return response.json(); })
+                .then(data => {
+                    if (data.status === 'success') {
+                        const newCategoryDiv = document.createElement('div'); newCategoryDiv.className = 'col'; newCategoryDiv.id = `category-card-${data.category_id}`;
+                        const initialSpent = 0.00; const limit = parseFloat(data.category_limit).toFixed(2); const percentage = 0;
+                        newCategoryDiv.innerHTML = `<div class="card h-100"><div class="card-body position-relative"><h5 class="card-title">${data.category_name}</h5><p class="card-text">Budget: $${limit}</p><p class="card-text">Spent: $<span id="category-spent-${data.category_id}">${initialSpent.toFixed(2)}</span></p><div class="progress mb-4"><div class="progress-bar bg-info" style="width: ${percentage}%" role="progressbar" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100"></div></div><button type="button" class="btn btn-sm btn-outline-danger delete-category-btn position-absolute bottom-0 end-0 mb-2 me-2" data-category-id="${data.category_id}" data-category-name="${data.category_name.replace(/"/g, '&quot;')}" title="Delete Category"><i class="fa fa-trash"></i></button></div></div>`;
+                        budgetCategoryContainer.appendChild(newCategoryDiv);
+                        // Update Chart
+                        chartCategories.push(data.category_name); chartSpending.push(initialSpent);
+                        if (moneyFlowChartDiv && typeof Plotly !== 'undefined') { Plotly.react(moneyFlowChartDiv, chartData, plotLayout); }
+                        // Add to dropdown
+                        if (transactionCategorySelect) { transactionCategorySelect.add(new Option(data.category_name, data.category_id)); }
+                        addCategoryForm.reset(); addCategoryModal.hide();
+                        if (document.body.classList.contains('dark-mode')) { applyDarkModeStyles(newCategoryDiv.querySelector('.card')); }
+                    } else { handleFormErrors(addCategoryForm, data.form_errors, categoryErrorAlert, data.error); }
+                })
+                .catch(error => { console.error('Add Category Fetch Error:', error); const msg = error?.data?.error || error?.data?.message || 'A network or server error occurred.'; handleFormErrors(addCategoryForm, error?.data?.form_errors, categoryErrorAlert, msg); });
+            });
+        }
+
+        // Add Transaction
+        if (addTransactionForm && addTransactionModal && transactionListBody) {
+            addTransactionForm.addEventListener('submit', function(event) {
+                 event.preventDefault(); clearFormErrors(addTransactionForm); const formData = new FormData(addTransactionForm);
+                 fetch(addTransactionForm.action, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrftoken } })
+                 .then(response => { if (!response.ok) { return response.json().then(errData => { throw { status: response.status, data: errData }; }); } return response.json(); })
+                 .then(data => {
+                     if (data.status === 'success') {
+                         // Update Category Card
+                         const categoryCard = document.getElementById(`category-card-${data.transaction.category_id}`);
+                         if (categoryCard) { const budgetLimitText = categoryCard.querySelector('.card-text:nth-of-type(1)')?.textContent; const budgetLimitMatch = budgetLimitText?.match(/Budget: \$([\d.]+)/); if (budgetLimitMatch) { updateCategoryCardDisplay(data.transaction.category_id, data.updated_category_spent, budgetLimitMatch[1]); } }
+                         // Update Total Spent
+                         if (totalSpentDisplay) { totalSpentDisplay.textContent = parseFloat(data.total_spent).toFixed(2); }
+                         // Add Transaction Row
+                         const newRow = document.createElement('tr'); newRow.id = `transaction-row-${data.transaction.id}`; newRow.innerHTML = `<td>${data.transaction.date}</td><td>${data.transaction.category_name}</td><td>${data.transaction.description || '-'}</td><td class="text-end text-danger">-$${parseFloat(data.transaction.amount).toFixed(2)}</td>`;
+                         const noTransactionRow = document.getElementById('no-transactions-row'); if (noTransactionRow) { noTransactionRow.remove(); }
+                         transactionListBody.insertBefore(newRow, transactionListBody.firstChild);
+                         if (document.body.classList.contains('dark-mode')) { applyDarkModeStyles(newRow); }
+                         // Update Chart
+                         let categoryIndex = chartCategories.indexOf(data.transaction.category_name); if (categoryIndex !== -1) { chartSpending[categoryIndex] = parseFloat(data.updated_category_spent); } else { console.warn("Category from transaction not found in chart data."); }
+                         if (moneyFlowChartDiv && typeof Plotly !== 'undefined') { Plotly.react(moneyFlowChartDiv, chartData, plotLayout); }
+                         // Reset & Hide
+                         addTransactionForm.reset(); addTransactionModal.hide();
+                     } else { handleFormErrors(addTransactionForm, data.form_errors, transactionErrorAlert, data.error); }
+                 })
+                 .catch(error => { console.error('Add Transaction Fetch Error:', error); const msg = error?.data?.error || error?.data?.message || 'A network or server error occurred.'; handleFormErrors(addTransactionForm, error?.data?.form_errors, transactionErrorAlert, msg); });
+            });
+        }
+
+        // Delete Category (Delegation)
+        if (budgetCategoryContainer) {
+            budgetCategoryContainer.addEventListener('click', function(event) {
+                const deleteButton = event.target.closest('.delete-category-btn');
+                if (deleteButton) {
+                    const categoryId = deleteButton.dataset.categoryId; const categoryName = deleteButton.dataset.categoryName;
+                    if (confirm(`Are you sure you want to delete the category "${categoryName}"? This action cannot be undone.`)) {
+                        const deleteUrl = `/dashboard/category/${categoryId}/delete/`; // *** VERIFY URL ***
+                        fetch(deleteUrl, { method: 'DELETE', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrftoken } })
+                        .then(response => { if (response.ok) { return response.json(); } else { return response.json().then(errData => { throw { status: response.status, message: errData.message || `Server error: ${response.status}` }; }).catch(() => { throw { status: response.status, message: `Failed to delete category. Status: ${response.status}` }; }); } })
+                        .then(data => {
+                            if (data.status === 'success') {
+                                document.getElementById(`category-card-${categoryId}`)?.remove();
+                                transactionCategorySelect?.querySelector(`option[value="${categoryId}"]`)?.remove();
+                                const indexToRemove = chartCategories.indexOf(categoryName);
+                                if (indexToRemove > -1) { chartCategories.splice(indexToRemove, 1); chartSpending.splice(indexToRemove, 1); if (moneyFlowChartDiv && typeof Plotly !== 'undefined') { Plotly.react(moneyFlowChartDiv, chartData, plotLayout); } }
+                                if (data.total_spent !== undefined && totalSpentDisplay) { totalSpentDisplay.textContent = parseFloat(data.total_spent).toFixed(2); }
+                                console.log(`Category ${categoryId} deleted.`);
+                                // Add user feedback (e.g., toast notification) here if desired
+                            } else { throw { status: 200, message: data.message || 'Deletion failed.' }; }
+                        })
+                        .catch(error => { console.error('Error deleting category:', error); alert(`Error: ${error.message || 'Could not delete category.'}`); });
+                    }
                 }
             });
-            
-            // Return the data
-            return {
-                monthly_budget: monthlyBudget,
-                total_spent: totalSpent,
-                remaining: monthlyBudget - totalSpent,
-                over_budget: totalSpent > monthlyBudget,
-                categories: categories
-            };
         }
-        
-        // Generate a mock AI report based on the budget data (no API needed)
-        function generateMockReport(budgetData) {
-            // Overall budget status
-            const overBudget = budgetData.total_spent > budgetData.monthly_budget;
-            const budgetStatus = overBudget ? 
-                `<div class="alert alert-danger">You are $${(budgetData.total_spent - budgetData.monthly_budget).toFixed(2)} over budget this month!</div>` : 
-                `<div class="alert alert-success">You are within budget! You have $${(budgetData.monthly_budget - budgetData.total_spent).toFixed(2)} remaining.</div>`;
-            
-            // Calculate budget percentage
-            const budgetPercentage = budgetData.monthly_budget > 0 ? 
-                Math.min(Math.round((budgetData.total_spent / budgetData.monthly_budget) * 100), 100) : 100;
-            
-            // Budget progress bar
-            const progressBarColor = overBudget ? 'bg-danger' : (budgetPercentage > 80 ? 'bg-warning' : 'bg-success');
-            const progressBar = `
-                <div class="progress mb-3">
-                    <div class="progress-bar ${progressBarColor}" role="progressbar" style="width: ${budgetPercentage}%" 
-                        aria-valuenow="${budgetPercentage}" aria-valuemin="0" aria-valuemax="100">
-                        ${budgetPercentage}%
-                    </div>
-                </div>
-            `;
-            
-            // Category analysis
-            let categoryAnalysis = '';
-            let recommendations = '';
-            
-            if (budgetData.categories.length === 0) {
-                categoryAnalysis = '<p>No budget categories found. Add categories to get a detailed analysis.</p>';
-            } else {
-                // Sort categories by percentage spent
-                const sortedCategories = [...budgetData.categories].sort((a, b) => {
-                    const aPercent = a.budget > 0 ? a.spent / a.budget : 0;
-                    const bPercent = b.budget > 0 ? b.spent / b.budget : 0;
-                    return bPercent - aPercent;
-                });
-                
-                // Generate category cards
-                categoryAnalysis = '<div class="row">';
-                sortedCategories.forEach(category => {
-                    const percentage = category.budget > 0 ? Math.min(Math.round((category.spent / category.budget) * 100), 100) : 100;
-                    const cardClass = category.over_budget ? 'border-danger' : (percentage > 80 ? 'border-warning' : 'border-success');
-                    const barColor = category.over_budget ? 'bg-danger' : (percentage > 80 ? 'bg-warning' : 'bg-success');
-                    
-                    categoryAnalysis += `
-                        <div class="col-md-6 mb-3">
-                            <div class="card ${cardClass}">
-                                <div class="card-body">
-                                    <h5 class="card-title">${category.name}</h5>
-                                    <p class="card-text">Budget: $${category.budget.toFixed(2)}</p>
-                                    <p class="card-text">Spent: $${category.spent.toFixed(2)}</p>
-                                    <div class="progress">
-                                        <div class="progress-bar ${barColor}" role="progressbar" style="width: ${percentage}%" 
-                                            aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">
-                                            ${percentage}%
-                                        </div>
-                                    </div>
-                                    ${category.over_budget ? 
-                                        `<div class="alert alert-danger mt-2 mb-0">
-                                            Over budget by $${(category.spent - category.budget).toFixed(2)}
-                                        </div>` : ''}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    
-                    // Generate recommendation for this category
-                    if (category.over_budget) {
-                        recommendations += `
-                            <li class="mb-2">Consider reducing spending in <strong>${category.name}</strong>. 
-                            You are currently $${(category.spent - category.budget).toFixed(2)} over your budget.</li>
-                        `;
-                    } else if (percentage > 80) {
-                        recommendations += `
-                            <li class="mb-2">Your <strong>${category.name}</strong> spending is approaching your budget limit. 
-                            You have $${(category.budget - category.spent).toFixed(2)} remaining.</li>
-                        `;
-                    }
-                });
-                categoryAnalysis += '</div>';
-                
-                // Add general recommendations if needed
-                if (recommendations === '') {
-                    recommendations = '<li>Great job staying within budget in all categories!</li>';
-                }
-                
-                // Add general saving tips
-                recommendations += `
-                    <li class="mb-2">Track your daily expenses to stay aware of your spending patterns.</li>
-                    <li class="mb-2">Consider automating savings by setting up automatic transfers to a savings account.</li>
-                    <li class="mb-2">Look for unnecessary subscriptions or services you can cancel or downgrade.</li>
-                `;
+
+        // Dark Mode Toggle
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('change', toggleDarkMode);
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                 darkModeToggle.checked = true;
+                 toggleDarkMode(); // Apply styles on load
             }
-            
-            // Spending trends (mock data with actual category names)
-            let trendsHTML = '';
-            if (budgetData.categories.length > 0) {
-                trendsHTML = `
-                    <div class="card mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">Spending Trends</h5>
-                        </div>
-                        <div class="card-body">
-                            <p>Based on your current spending patterns:</p>
-                            <ul>
-                `;
-                
-                // Get highest spending category
-                const highestCategory = [...budgetData.categories].sort((a, b) => b.spent - a.spent)[0];
-                trendsHTML += `<li>Your highest spending category is <strong>${highestCategory.name}</strong> at $${highestCategory.spent.toFixed(2)}.</li>`;
-                
-                // Calculate average spending per category
-                const totalCategories = budgetData.categories.length;
-                const avgSpending = budgetData.total_spent / totalCategories;
-                trendsHTML += `<li>You're spending an average of $${avgSpending.toFixed(2)} per category.</li>`;
-                
-                // Add some projected data
-                trendsHTML += `<li>At your current rate, you'll spend approximately $${(budgetData.total_spent * 12).toFixed(2)} over the next year.</li>`;
-                
-                trendsHTML += `
-                            </ul>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // Compile the full report
-            return `
-                <div class="container">
-                    <div class="card mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">Budget Summary</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6>Monthly Budget: $${budgetData.monthly_budget.toFixed(2)}</h6>
-                                    <h6>Total Spent: $${budgetData.total_spent.toFixed(2)}</h6>
-                                    <h6>Remaining: $${(budgetData.monthly_budget - budgetData.total_spent).toFixed(2)}</h6>
-                                </div>
-                                <div class="col-md-6">
-                                    ${budgetStatus}
-                                    ${progressBar}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">Category Analysis</h5>
-                        </div>
-                        <div class="card-body">
-                            ${categoryAnalysis}
-                        </div>
-                    </div>
-                    
-                    ${trendsHTML}
-                    
-                    <div class="card mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">Recommendations</h5>
-                        </div>
-                        <div class="card-body">
-                            <ul>
-                                ${recommendations}
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            `;
         }
-        
-        // Download report as HTML file
-        function downloadReport(reportContent) {
-            const htmlContent = `
-                <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Personal Spending Report</title>
-                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-                    <style>
-                        body { padding: 20px; }
-                        .report-header { margin-bottom: 20px; text-align: center; }
-                        .report-date { margin-bottom: 20px; text-align: right; color: #666; }
-                    </style>
-                </head>
-                <body>
-                    <div class="container py-5">
-                        <div class="report-header">
-                            <h1>Personal Spending Report</h1>
-                            <p class="report-date">Generated on ${new Date().toLocaleDateString()}</p>
-                        </div>
-                        <div class="report-content">
-                            ${reportContent}
-                        </div>
-                    </div>
-                </body>
-                </html>
-            `;
-            
-            // Create a blob and download link
-            const blob = new Blob([htmlContent], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `spending-report-${new Date().toISOString().slice(0, 10)}.html`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+
+        // Generate Report Button
+        // Use event delegation on a parent container if the button might be re-rendered
+        const reportSection = document.getElementById('spendingHabitsReportSection');
+        if (reportSection) {
+             reportSection.addEventListener('click', function(event) {
+                 if (event.target.matches('.generate-report-btn')) {
+                      handleGenerateReport();
+                 }
+             });
+        } else {
+             console.error("Could not find spending habits report section to attach delegated listener.");
         }
+
+    }); // End DOMContentLoaded
+
 </script>
 {% endblock content %}
