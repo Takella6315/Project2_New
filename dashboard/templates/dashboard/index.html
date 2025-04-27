@@ -386,4 +386,411 @@
 
 
     </script>
+    
+    <script>
+        // Wait for the page to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find the "Generate Full Report" button
+            const reportButtons = document.querySelectorAll('button');
+            let generateReportBtn = null;
+            
+            for (let btn of reportButtons) {
+                if (btn.textContent.trim() === 'Generate Full Report') {
+                    generateReportBtn = btn;
+                    break;
+                }
+            }
+            
+            if (generateReportBtn) {
+                // Add click event listener
+                generateReportBtn.addEventListener('click', handleGenerateReport);
+                console.log("Event listener attached to Generate Full Report button");
+            } else {
+                console.error("Could not find Generate Full Report button");
+            }
+        });
+        
+        // Handle the generate report button click
+        async function handleGenerateReport() {
+            console.log("Generate Report button clicked!");
+            
+            // Find the report section (the parent of the button)
+            const reportSection = findSpendingHabitsSection();
+            if (!reportSection) {
+                console.error("Could not find Spending Habits Report section");
+                return;
+            }
+            
+            const reportCardBody = reportSection.querySelector('.card-body');
+            if (!reportCardBody) {
+                console.error("Could not find card body in Spending Habits Report section");
+                return;
+            }
+            
+            // Save original content to restore later if needed
+            const originalContent = reportCardBody.innerHTML;
+            
+            // Show loading spinner
+            reportCardBody.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Generating your personalized spending report...</p>
+                    <p class="text-muted small">This may take a moment...</p>
+                </div>
+            `;
+            
+            try {
+                // Collect budget data
+                const budgetData = collectBudgetData();
+                console.log("Budget data collected:", budgetData);
+                
+                // Generate mock report (no API needed)
+                const reportHTML = generateMockReport(budgetData);
+                
+                // Simulate loading delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Display the report
+                reportCardBody.innerHTML = `
+                    <h4 class="mb-3">Your Personalized Spending Report</h4>
+                    <div class="report-content mb-3">
+                        ${reportHTML}
+                    </div>
+                    <div class="d-flex justify-content-between mt-3">
+                        <button class="btn btn-sm btn-outline-secondary close-report-btn">Close Report</button>
+                        <button class="btn btn-sm btn-primary download-report-btn">Download Report</button>
+                    </div>
+                `;
+                
+                // Add event listeners to new buttons
+                reportCardBody.querySelector('.close-report-btn').addEventListener('click', function() {
+                    reportCardBody.innerHTML = originalContent;
+                    
+                    // Re-find the report button and re-attach event listener
+                    setTimeout(() => {
+                        const newButtons = reportCardBody.querySelectorAll('button');
+                        for (let btn of newButtons) {
+                            if (btn.textContent.trim() === 'Generate Full Report') {
+                                btn.addEventListener('click', handleGenerateReport);
+                                break;
+                            }
+                        }
+                    }, 100);
+                });
+                
+                reportCardBody.querySelector('.download-report-btn').addEventListener('click', function() {
+                    downloadReport(reportHTML);
+                });
+                
+            } catch (error) {
+                console.error("Error:", error);
+                
+                // Show error message
+                reportCardBody.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5>Error Generating Report</h5>
+                        <p>${error.message || "Unknown error occurred"}</p>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-outline-secondary try-again-btn">Try Again</button>
+                        <button class="btn btn-sm btn-outline-secondary ms-2 cancel-btn">Cancel</button>
+                    </div>
+                `;
+                
+                // Add event listeners to error buttons
+                reportCardBody.querySelector('.try-again-btn').addEventListener('click', function() {
+                    handleGenerateReport();
+                });
+                
+                reportCardBody.querySelector('.cancel-btn').addEventListener('click', function() {
+                    reportCardBody.innerHTML = originalContent;
+                    
+                    // Re-find the report button and re-attach event listener
+                    setTimeout(() => {
+                        const newButtons = reportCardBody.querySelectorAll('button');
+                        for (let btn of newButtons) {
+                            if (btn.textContent.trim() === 'Generate Full Report') {
+                                btn.addEventListener('click', handleGenerateReport);
+                                break;
+                            }
+                        }
+                    }, 100);
+                });
+            }
+        }
+        
+        // Find the spending habits section
+        function findSpendingHabitsSection() {
+            const sections = document.querySelectorAll('section');
+            for (let section of sections) {
+                const heading = section.querySelector('h2');
+                if (heading && heading.textContent.includes('Spending Habits Report')) {
+                    return section;
+                }
+            }
+            return null;
+        }
+        
+        // Collect budget data from the dashboard
+        function collectBudgetData() {
+            // Get monthly budget
+            const budgetDisplay = document.querySelector('.budget-display');
+            const totalSpentElement = document.getElementById('totalSpent');
+            
+            const monthlyBudgetText = budgetDisplay ? budgetDisplay.textContent : '';
+            const monthlyBudget = parseFloat(monthlyBudgetText.replace('Budget: $', '')) || 0;
+            
+            const totalSpent = totalSpentElement ? parseFloat(totalSpentElement.textContent) || 0 : 0;
+            
+            // Get categories
+            const categories = [];
+            const categoryElements = document.querySelectorAll('[id^="category-"]');
+            
+            categoryElements.forEach(element => {
+                const titleElement = element.querySelector('.card-title');
+                const budgetElement = element.querySelector('.card-text:nth-of-type(1)');
+                const spentElement = element.querySelector('.card-text:nth-of-type(2)');
+                
+                if (titleElement && budgetElement && spentElement) {
+                    const name = titleElement.textContent.trim();
+                    const budget = parseFloat(budgetElement.textContent.replace('Budget: $', '')) || 0;
+                    const spent = parseFloat(spentElement.textContent.replace('Spent: $', '')) || 0;
+                    
+                    categories.push({
+                        name: name,
+                        budget: budget,
+                        spent: spent,
+                        over_budget: spent > budget,
+                        percentage: budget > 0 ? (spent / budget) * 100 : 0
+                    });
+                }
+            });
+            
+            // Return the data
+            return {
+                monthly_budget: monthlyBudget,
+                total_spent: totalSpent,
+                remaining: monthlyBudget - totalSpent,
+                over_budget: totalSpent > monthlyBudget,
+                categories: categories
+            };
+        }
+        
+        // Generate a mock AI report based on the budget data (no API needed)
+        function generateMockReport(budgetData) {
+            // Overall budget status
+            const overBudget = budgetData.total_spent > budgetData.monthly_budget;
+            const budgetStatus = overBudget ? 
+                `<div class="alert alert-danger">You are $${(budgetData.total_spent - budgetData.monthly_budget).toFixed(2)} over budget this month!</div>` : 
+                `<div class="alert alert-success">You are within budget! You have $${(budgetData.monthly_budget - budgetData.total_spent).toFixed(2)} remaining.</div>`;
+            
+            // Calculate budget percentage
+            const budgetPercentage = budgetData.monthly_budget > 0 ? 
+                Math.min(Math.round((budgetData.total_spent / budgetData.monthly_budget) * 100), 100) : 100;
+            
+            // Budget progress bar
+            const progressBarColor = overBudget ? 'bg-danger' : (budgetPercentage > 80 ? 'bg-warning' : 'bg-success');
+            const progressBar = `
+                <div class="progress mb-3">
+                    <div class="progress-bar ${progressBarColor}" role="progressbar" style="width: ${budgetPercentage}%" 
+                        aria-valuenow="${budgetPercentage}" aria-valuemin="0" aria-valuemax="100">
+                        ${budgetPercentage}%
+                    </div>
+                </div>
+            `;
+            
+            // Category analysis
+            let categoryAnalysis = '';
+            let recommendations = '';
+            
+            if (budgetData.categories.length === 0) {
+                categoryAnalysis = '<p>No budget categories found. Add categories to get a detailed analysis.</p>';
+            } else {
+                // Sort categories by percentage spent
+                const sortedCategories = [...budgetData.categories].sort((a, b) => {
+                    const aPercent = a.budget > 0 ? a.spent / a.budget : 0;
+                    const bPercent = b.budget > 0 ? b.spent / b.budget : 0;
+                    return bPercent - aPercent;
+                });
+                
+                // Generate category cards
+                categoryAnalysis = '<div class="row">';
+                sortedCategories.forEach(category => {
+                    const percentage = category.budget > 0 ? Math.min(Math.round((category.spent / category.budget) * 100), 100) : 100;
+                    const cardClass = category.over_budget ? 'border-danger' : (percentage > 80 ? 'border-warning' : 'border-success');
+                    const barColor = category.over_budget ? 'bg-danger' : (percentage > 80 ? 'bg-warning' : 'bg-success');
+                    
+                    categoryAnalysis += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card ${cardClass}">
+                                <div class="card-body">
+                                    <h5 class="card-title">${category.name}</h5>
+                                    <p class="card-text">Budget: $${category.budget.toFixed(2)}</p>
+                                    <p class="card-text">Spent: $${category.spent.toFixed(2)}</p>
+                                    <div class="progress">
+                                        <div class="progress-bar ${barColor}" role="progressbar" style="width: ${percentage}%" 
+                                            aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">
+                                            ${percentage}%
+                                        </div>
+                                    </div>
+                                    ${category.over_budget ? 
+                                        `<div class="alert alert-danger mt-2 mb-0">
+                                            Over budget by $${(category.spent - category.budget).toFixed(2)}
+                                        </div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Generate recommendation for this category
+                    if (category.over_budget) {
+                        recommendations += `
+                            <li class="mb-2">Consider reducing spending in <strong>${category.name}</strong>. 
+                            You are currently $${(category.spent - category.budget).toFixed(2)} over your budget.</li>
+                        `;
+                    } else if (percentage > 80) {
+                        recommendations += `
+                            <li class="mb-2">Your <strong>${category.name}</strong> spending is approaching your budget limit. 
+                            You have $${(category.budget - category.spent).toFixed(2)} remaining.</li>
+                        `;
+                    }
+                });
+                categoryAnalysis += '</div>';
+                
+                // Add general recommendations if needed
+                if (recommendations === '') {
+                    recommendations = '<li>Great job staying within budget in all categories!</li>';
+                }
+                
+                // Add general saving tips
+                recommendations += `
+                    <li class="mb-2">Track your daily expenses to stay aware of your spending patterns.</li>
+                    <li class="mb-2">Consider automating savings by setting up automatic transfers to a savings account.</li>
+                    <li class="mb-2">Look for unnecessary subscriptions or services you can cancel or downgrade.</li>
+                `;
+            }
+            
+            // Spending trends (mock data with actual category names)
+            let trendsHTML = '';
+            if (budgetData.categories.length > 0) {
+                trendsHTML = `
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Spending Trends</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Based on your current spending patterns:</p>
+                            <ul>
+                `;
+                
+                // Get highest spending category
+                const highestCategory = [...budgetData.categories].sort((a, b) => b.spent - a.spent)[0];
+                trendsHTML += `<li>Your highest spending category is <strong>${highestCategory.name}</strong> at $${highestCategory.spent.toFixed(2)}.</li>`;
+                
+                // Calculate average spending per category
+                const totalCategories = budgetData.categories.length;
+                const avgSpending = budgetData.total_spent / totalCategories;
+                trendsHTML += `<li>You're spending an average of $${avgSpending.toFixed(2)} per category.</li>`;
+                
+                // Add some projected data
+                trendsHTML += `<li>At your current rate, you'll spend approximately $${(budgetData.total_spent * 12).toFixed(2)} over the next year.</li>`;
+                
+                trendsHTML += `
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Compile the full report
+            return `
+                <div class="container">
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Budget Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Monthly Budget: $${budgetData.monthly_budget.toFixed(2)}</h6>
+                                    <h6>Total Spent: $${budgetData.total_spent.toFixed(2)}</h6>
+                                    <h6>Remaining: $${(budgetData.monthly_budget - budgetData.total_spent).toFixed(2)}</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    ${budgetStatus}
+                                    ${progressBar}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Category Analysis</h5>
+                        </div>
+                        <div class="card-body">
+                            ${categoryAnalysis}
+                        </div>
+                    </div>
+                    
+                    ${trendsHTML}
+                    
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Recommendations</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul>
+                                ${recommendations}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Download report as HTML file
+        function downloadReport(reportContent) {
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Personal Spending Report</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                    <style>
+                        body { padding: 20px; }
+                        .report-header { margin-bottom: 20px; text-align: center; }
+                        .report-date { margin-bottom: 20px; text-align: right; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container py-5">
+                        <div class="report-header">
+                            <h1>Personal Spending Report</h1>
+                            <p class="report-date">Generated on ${new Date().toLocaleDateString()}</p>
+                        </div>
+                        <div class="report-content">
+                            ${reportContent}
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Create a blob and download link
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `spending-report-${new Date().toISOString().slice(0, 10)}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        </script>
 {% endblock content %}
