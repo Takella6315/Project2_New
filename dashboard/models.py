@@ -18,7 +18,7 @@ class Transaction(models.Model):
     description = models.CharField(max_length=255, blank=True, null=True) # Description of item added
     date = models.DateField(default=timezone.now) # Default = today
     created_at = models.DateTimeField(auto_now_add=True) # Date added
-
+    is_categorized = models.BooleanField(default=False) # True if transaction is categorized
     def __str__(self):
         return f"{self.user.username} - {self.category.name} - ${self.amount} on {self.date}"
 

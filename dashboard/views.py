@@ -8,6 +8,8 @@ from django.core.files.storage import FileSystemStorage
 from django.db.models import F, Sum
 from django.utils import timezone
 import datetime
+from django.conf import settings
+import stripe
 
 
 
@@ -192,3 +194,66 @@ def delete_budget_category(request, category_id):
 
         print(f"Error deleting category {category_id} for user {request.user.id}: {e}") # Basic print for development
         return JsonResponse({'status': 'error', 'message': 'An unexpected server error occurred.'}, status=500)
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+@login_required
+def link_bank_account(request):
+    try:
+        account_link = stripe.financial_connections.Account.create(
+            customer=request.user.stripe_customer_id,
+            permissions=['transactions'],
+        )
+        return JsonResponse({'status': 'success', 'url': account_link['url']})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+# dashboard/views.py
+@login_required
+def fetch_and_log_transactions(request):
+    try:
+        accounts = stripe.financial_connections.Account.list(
+            customer=request.user.stripe_customer_id
+        )
+        for account in accounts['data']:
+            txn_data = stripe.financial_connections.Transaction.list(
+                account=account['id']
+            )
+            for txn in txn_data['data']:
+                Transaction.objects.get_or_create(
+                    user=request.user,
+                    amount=txn['amount'] / 100,  # Convert cents to dollars
+                    description=txn.get('description', 'No description'),
+                    date=datetime.datetime.fromtimestamp(txn['created']),
+                    defaults={'is_categorized': False}
+                )
+        return JsonResponse({'status': 'success', 'message': 'Transactions fetched and logged.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+# dashboard/views.py
+@login_required
+def list_uncategorized_transactions(request):
+    transactions = Transaction.objects.filter(user=request.user, is_categorized=False)
+    return render(request, 'dashboard/uncategorized_transactions.html', {'transactions': transactions})
+
+# dashboard/views.py
+@login_required
+def categorize_transaction(request, transaction_id):
+    if request.method == 'POST':
+        category_id = request.POST.get('category_id')
+        try:
+            transaction = get_object_or_404(Transaction, id=transaction_id, user=request.user)
+            category = get_object_or_404(BudgetCategory, id=category_id, user=request.user)
+            transaction.category = category
+            transaction.is_categorized = True
+            transaction.save()
+
+            category.amount_spent = F('amount_spent') + transaction.amount
+            category.save(update_fields=['amount_spent'])
+            category.refresh_from_db()
+
+            return JsonResponse({'status': 'success', 'message': 'Transaction categorized successfully.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)

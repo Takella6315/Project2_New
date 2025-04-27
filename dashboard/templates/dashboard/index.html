@@ -356,6 +356,7 @@
             </thead>
             <tbody id="transactionListBody">
               {% for transaction in template_data.recent_transactions %}
+                  {% if not transaction.is_categorized %}
               <tr id="transaction-row-{{ transaction.id }}">
                 <td>{{ transaction.date|date:"Y-m-d" }}</td>
                 <td>{{ transaction.category.name }}</td>
@@ -364,13 +365,14 @@
                   -${{ transaction.amount|floatformat:2 }}
                 </td>
               </tr>
+                  {% endif %}
               {% empty %}
               <tr id="no-transactions-row"> {# Add ID for easy removal #}
                 <td colspan="4" class="text-center">
                   No transactions recorded yet.
                 </td>
               </tr>
-              {% endfor %}
+                {% endfor %}
             </tbody>
           </table>
        </div>
