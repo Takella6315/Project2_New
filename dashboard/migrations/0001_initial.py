@@ -15,35 +15,12 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Movie',
-            fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=255)),
-                ('price', models.IntegerField()),
-                ('genre', models.CharField(max_length=255)),
-                ('year', models.IntegerField()),
-                ('length', models.IntegerField()),
-                ('description', models.TextField()),
-                ('image', models.ImageField(upload_to='movie_images/')),
-            ],
-        ),
-        migrations.CreateModel(
             name='BudgetCategory',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=255)),
                 ('budget_limit', models.DecimalField(decimal_places=2, max_digits=10)),
                 ('amount_spent', models.DecimalField(decimal_places=2, default=0, max_digits=10)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-            ],
-        ),
-        migrations.CreateModel(
-            name='Review',
-            fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('comment', models.CharField(max_length=255)),
-                ('date', models.DateTimeField(auto_now_add=True)),
-                ('movie', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='dashboard.movie')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),

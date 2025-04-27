@@ -1,6 +1,6 @@
 # dashboard/views.py
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Movie, Review, BudgetCategory, Transaction
+from .models import BudgetCategory, Transaction
 from django.contrib.auth.decorators import login_required
 from .forms import AdjustBudgetForm, AddCategoryForm, TransactionForm
 from django.http import JsonResponse
