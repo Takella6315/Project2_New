@@ -1,872 +1,280 @@
-{% extends 'base.html' %} {% load static %} {% block content %}
-<div
-  class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom"
->
-  <h1 class="h2">Dashboard</h1>
-  <div class="btn-toolbar mb-2 mb-md-0"></div>
-</div>
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Dashboard</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+        </div>
+    </div>
 
-<section class="mb-4">
-  <h2>Budget Overview</h2>
-  <div class="card">
-    <div class="card-body">
-      <div
-        class="row row-cols-1 row-cols-md-3 g-4"
-        id="budgetCategoryContainer"
-      >
-        <div class="col">
-          <div class="card h-100">
+    <section class="mb-4">
+        <h2>Budget Overview</h2>
+        <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Monthly Budget</h5>
-              <p class="card-text budget-display">
-                Budget: ${{ template_data.monthly_budget|floatformat:2 }} {# Format currency #}
-              </p>
-              <p class="card-text">
-                Spent: $<span id="totalSpentDisplay"
-                  >{{ template_data.total_spent|floatformat:2 }}</span
-                >
-              </p>
-              {% if template_data.total_spent > template_data.monthly_budget %}
-              <div class="alert alert-warning mt-2" role="alert">
-                ⚠️ Over Budget!
-              </div>
-              {% endif %}
-              <div class="progress">
-                 {# Calculate percentage dynamically #}
-                {% with percentage=0 %}
-                    {% if template_data.monthly_budget > 0 %}
-                        {% widthratio template_data.total_spent template_data.monthly_budget 100 as percentage %}
-                    {% endif %}
-                    <div
-                      class="progress-bar {% if percentage > 100 %}bg-danger{% elif percentage > 85 %}bg-warning{% else %}bg-success{% endif %}"
-                      style="width: {% if percentage > 100 %}100{% else %}{{ percentage }}{% endif %}%"
-                      role="progressbar"
-                      aria-valuenow="{{ percentage }}"
-                      aria-valuemin="0"
-                      aria-valuemax="100"
-                    ></div>
-                {% endwith %}
-              </div>
-              <button
-                class="btn btn-sm btn-outline-secondary mt-2"
-                data-bs-toggle="modal"
-                data-bs-target="#adjustBudgetModal"
-              >
-                Adjust Budget
-              </button>
-
-              <div
-                class="alert alert-warning mt-2"
-                role="alert"
-                style="display: none"
-              >
-                Budget exceeded!
-              </div>
+                <div class="row row-cols-1 row-cols-md-3 g-4">
+                    <div class="col">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Monthly Budget</h5>
+                                <p class="card-text budget-display">Budget: ${{ template_data.monthly_budget }}</p>
+                                <p class="card-text">Spent: $<span id="totalSpent">{{ template_data.total_spent }}</span></p>
+                                {% if template_data.total_spent > template_data.monthly_budget %}
+                                    <div class="alert alert-warning mt-2" role="alert">
+                                        ⚠️ Over Budget!
+                                    </div>
+                                {% endif %}
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" style="width: 76%" role="progressbar"
+                                         aria-valuenow="76" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-secondary mt-2" data-bs-toggle="modal"
+                                        data-bs-target="#adjustBudgetModal">Adjust Budget
+                                </button>
+                                 <div class="alert alert-warning mt-2" role="alert" style="display: none;">
+                                    Budget exceeded!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% for category in template_data.budget_categories %}
+                    <div class="col" id="category-{{ category.id }}">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ category.name }}</h5>
+                                <p class="card-text">Budget: ${{ category.budget_limit }}</p>
+                                 <p class="card-text">Spent: ${{ category.amount_spent }}</p>
+                                {% if category.amount_spent > category.budget_limit %}
+                                    <div class="alert alert-warning mt-2" role="alert">
+                                        ⚠️ Over Budget!
+                                    </div>
+                                {% endif %}
+                                <div class="progress">
+                                    <div class="progress-bar bg-info" style="width: 50%" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="btn btn-sm btn-primary mt-3" data-bs-toggle="modal"
+                        data-bs-target="#addCategoryModal">Add New Budget Category
+                </button>
             </div>
-          </div>
         </div>
+    </section>
 
-        {% for category in template_data.budget_categories %}
-        <div class="col" id="category-card-{{ category.id }}">
-          <div class="card h-100">
-            {# Added position-relative for the delete button positioning #}
-            <div class="card-body position-relative">
-              <h5 class="card-title">{{ category.name }}</h5>
-              <p class="card-text">
-                Budget: ${{ category.budget_limit|floatformat:2 }}
-              </p>
-              <p class="card-text">
-                Spent: $<span id="category-spent-{{ category.id }}"
-                  >{{ category.amount_spent|floatformat:2 }}</span
-                >
-              </p>
-              {% if category.amount_spent > category.budget_limit %}
-              <div class="alert alert-warning mt-2" role="alert">
-                ⚠️ Over Budget!
-              </div>
-              {% endif %}
-              {# Added margin-bottom to progress for spacing #}
-              <div class="progress mb-4">
-                 {# Calculate percentage dynamically #}
-                 {% with cat_percentage=0 %}
-                    {% if category.budget_limit > 0 %}
-                        {% widthratio category.amount_spent category.budget_limit 100 as cat_percentage %}
-                    {% endif %}
-                    <div
-                      class="progress-bar {% if cat_percentage > 100 %}bg-danger{% elif cat_percentage > 85 %}bg-warning{% else %}bg-info{% endif %}"
-                      style="width: {% if cat_percentage > 100 %}100{% else %}{{ cat_percentage }}{% endif %}%"
-                      role="progressbar"
-                      aria-valuenow="{{ cat_percentage }}"
-                      aria-valuemin="0"
-                      aria-valuemax="100"
-                    ></div>
-                {% endwith %}
-              </div>
-              {# --- START: Added Trash Icon Button --- #}
-              <button
-                  type="button"
-                  class="btn btn-sm btn-outline-danger delete-category-btn position-absolute bottom-0 end-0 mb-2 me-2"
-                  data-category-id="{{ category.id }}"
-                  data-category-name="{{ category.name|escapejs }}" {# Use escapejs for names in data attributes #}
-                  title="Delete Category"
-              >
-                  {# Ensure Font Awesome is included in base.html #}
-                  <i class="fa fa-trash"></i>
-              </button>
-              {# --- END: Added Trash Icon Button --- #}
+    <div class="modal fade" id="adjustBudgetModal" tabindex="-1" aria-labelledby="adjustBudgetModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="adjustBudgetModalLabel">Adjust Monthly Budget</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="adjustBudgetForm" method="post" action="{% url 'dashboard.adjust_budget' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="new_budget" class="form-label">New Monthly Budget:</label>
+                            <input type="number" class="form-control" id="new_budget" name="new_budget"
+                                   value="{{ template_data.monthly_budget }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
-          </div>
         </div>
-        {% endfor %}
-      </div>
-      {# Buttons outside the loop #}
-      <button
-        class="btn btn-sm btn-primary mt-3"
-        data-bs-toggle="modal"
-        data-bs-target="#addCategoryModal"
-      >
-        <i class="fa fa-plus me-1"></i> Add Category {# Added Icon #}
-      </button>
-      <button
-        class="btn btn-sm btn-success mt-3 ms-2"
-        data-bs-toggle="modal"
-        data-bs-target="#addTransactionModal"
-      >
-        <i class="fa fa-plus me-1"></i> Add Transaction
-      </button>
     </div>
-  </div>
-</section>
 
-<div
-  class="modal fade"
-  id="adjustBudgetModal"
-  tabindex="-1"
-  aria-labelledby="adjustBudgetModalLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="adjustBudgetModalLabel">
-          Adjust Monthly Budget
-        </h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
-      </div>
-      <div class="modal-body">
-        {# Use the specific name from urls.py if namespaced, e.g., 'dashboard:adjust_budget' #}
-        <form
-          id="adjustBudgetForm"
-          method="post"
-          action="{% url 'dashboard.adjust_budget' %}" {# Adjusted URL name assumption #}
-        >
-          {% csrf_token %}
-          <div class="mb-3">
-            <label for="new_budget" class="form-label"
-              >New Monthly Budget:</label
-            >
-            <input
-              type="number"
-              class="form-control"
-              id="new_budget"
-              name="new_budget"
-              value="{{ template_data.monthly_budget|floatformat:2 }}"
-              step="0.01" {# Add step for currency #}
-              min="0" {# Prevent negative budget #}
-              required
-            />
-            <div class="invalid-feedback" id="error_new_budget"></div>
-          </div>
-          <button type="submit" class="btn btn-primary">Save Changes</button>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div
-  class="modal fade"
-  id="addCategoryModal"
-  tabindex="-1"
-  aria-labelledby="addCategoryModalLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addCategoryModalLabel">
-          Add New Budget Category
-        </h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
-      </div>
-      <div class="modal-body">
-         <div id="categoryErrorAlert" class="alert alert-danger" style="display: none;" role="alert"></div>
-        <form
-          id="addCategoryForm"
-          method="post"
-          action="{% url 'dashboard.add_budget_category' %}" {# Adjusted URL name assumption #}
-        >
-          {% csrf_token %}
-          <div class="mb-3">
-            <label for="category_name" class="form-label">Category Name:</label>
-            <input
-              type="text"
-              class="form-control"
-              id="category_name"
-              name="category_name"
-              required
-            />
-            <div class="invalid-feedback" id="error_category_name"></div>
-          </div>
-          <div class="mb-3">
-            <label for="category_limit" class="form-label">Budget Limit:</label>
-            <input
-              type="number"
-              class="form-control"
-              id="category_limit"
-              name="category_limit"
-              step="0.01" {# Add step for currency #}
-              min="0" {# Prevent negative limit #}
-              required
-            />
-            <div class="invalid-feedback" id="error_category_limit"></div>
-          </div>
-          <button type="submit" class="btn btn-primary">Add Category</button>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div
-  class="modal fade"
-  id="addTransactionModal"
-  tabindex="-1"
-  aria-labelledby="addTransactionModalLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addTransactionModalLabel">
-          Add New Transaction
-        </h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
-      </div>
-      <div class="modal-body">
-        <div
-          id="transactionErrorAlert"
-          class="alert alert-danger"
-          style="display: none"
-          role="alert"
-        ></div>
-        {# Use the specific name from urls.py if namespaced, e.g., 'dashboard:add_transaction' #}
-        <form
-          id="addTransactionForm"
-          method="post"
-          action="{% url 'dashboard.add_transaction' %}"
-        >
-          {% csrf_token %}
-          {# Assuming template_data.transaction_form is passed from the view #}
-          {% if template_data.transaction_form %}
-              <div class="mb-3">
-                <label
-                  for="{{ template_data.transaction_form.category.id_for_label }}"
-                  class="form-label"
-                  >{{ template_data.transaction_form.category.label }}</label
-                >
-                {{ template_data.transaction_form.category }}
-                <div class="invalid-feedback" id="error_category"></div>
-              </div>
-              <div class="mb-3">
-                <label
-                  for="{{ template_data.transaction_form.amount.id_for_label }}"
-                  class="form-label"
-                  >{{ template_data.transaction_form.amount.label }}</label
-                >
-                {{ template_data.transaction_form.amount }}
-                <div class="invalid-feedback" id="error_amount"></div>
-              </div>
-              <div class="mb-3">
-                <label
-                  for="{{ template_data.transaction_form.description.id_for_label }}"
-                  class="form-label"
-                  >{{ template_data.transaction_form.description.label }}</label
-                >
-                {{ template_data.transaction_form.description }}
-                <div class="invalid-feedback" id="error_description"></div>
-              </div>
-              <div class="mb-3">
-                <label
-                  for="{{ template_data.transaction_form.date.id_for_label }}"
-                  class="form-label"
-                  >{{ template_data.transaction_form.date.label }}</label
-                >
-                {{ template_data.transaction_form.date }}
-                <div class="invalid-feedback" id="error_date"></div>
-              </div>
-          {% else %}
-              <p class="text-danger">Transaction form not available.</p>
-          {% endif %}
-          <button type="submit" class="btn btn-primary">Add Transaction</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-<section class="mb-4">
-  <h2>Connect External Accounts</h2>
-  <div class="card">
-      <div class="card-body">
-          <p>Securely link your external bank accounts via Stripe to automatically sync transactions.</p>
-          <form action="{% url 'dashboard.connect_stripe' %}" method="post">
-              {% csrf_token %}
-              <button type="submit" class="btn btn-primary">
-                  <i class="fab fa-stripe me-2"></i>Connect with Stripe
-                  </button>
-          </form>
-           <small class="d-block text-muted mt-2">You will be redirected to Stripe to securely log in or sign up.</small>
-      </div>
-  </div>
-</section>
-
-<section class="mb-4">
-  <h2>Recent Transactions</h2>
-  <div class="card">
-    <div class="card-body">
-      <div class="table-responsive"> {# Make table responsive #}
-          <table class="table table-striped table-hover">
-            <thead>
-              <tr>
-                <th scope="col">Date</th>
-                <th scope="col">Category</th>
-                <th scope="col">Description</th>
-                <th scope="col" class="text-end">Amount</th>
-              </tr>
-            </thead>
-            <tbody id="transactionListBody">
-              {% for transaction in template_data.recent_transactions %}
-              <tr id="transaction-row-{{ transaction.id }}">
-                <td>{{ transaction.date|date:"Y-m-d" }}</td>
-                <td>{{ transaction.category.name }}</td>
-                <td>{{ transaction.description|default:"-" }}</td>
-                <td class="text-end text-danger">
-                  -${{ transaction.amount|floatformat:2 }}
-                </td>
-              </tr>
-              {% empty %}
-              <tr id="no-transactions-row"> {# Add ID for easy removal #}
-                <td colspan="4" class="text-center">
-                  No transactions recorded yet.
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-       </div>
-    </div>
-  </div>
-</section>
-
-<section class="mb-4">
-  <h2>Overview</h2>
-  <div class="row">
-    <div class="col-md-4 mb-3 mb-md-0"> {# Add bottom margin for small screens #}
-      <div class="card h-100">
-        <div class="card-header">Today's Spending</div>
-        <div class="card-body">
-          <p class="card-text fs-4" id="todaySpentDisplay">
-            ${{ template_data.today_spent|floatformat:2 }}
-          </p>
-          {# Removed redundant button #}
+    <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCategoryModalLabel">Add New Budget Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addCategoryForm" method="post" action="{% url 'dashboard.add_budget_category' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="category_name" class="form-label">Category Name:</label>
+                            <input type="text" class="form-control" id="category_name" name="category_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="category_limit" class="form-label">Budget Limit:</label>
+                            <input type="number" class="form-control" id="category_limit" name="category_limit" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="category_spent" class="form-label">Amount Spent:</label>
+                            <input type="number" class="form-control" id="category_spent" name="category_spent" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Category</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-    <div class="col-md-4 mb-3 mb-md-0"> {# Add bottom margin for small screens #}
-      <div class="card h-100">
-        <div class="card-header">This Week's Spending</div>
-        <div class="card-body">
-          <p class="card-text fs-4" id="weekSpentDisplay">
-            ${{ template_data.week_spent|floatformat:2 }}
-          </p>
+
+    <section class="mb-4">
+        <h2>Overview</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">Today's Spending</div>
+                    <div class="card-body">
+                        <p class="card-text">$XX.XX</p>
+                        <button class="btn btn-sm btn-outline-secondary">Add Transaction</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">This Week's Spending</div>
+                    <div class="card-body">
+                        <p class="card-text">$YYY.YY</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">This Month's Spending</div>
+                    <div class="card-body">
+                        <p class="card-text">$ZZZZ.ZZ</p>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card h-100">
-        <div class="card-header">This Month's Spending</div>
-        <div class="card-body">
-          <p class="card-text fs-4" id="monthSpentDisplay">
-            ${{ template_data.month_spent|floatformat:2 }}
-          </p>
+    </section>
+
+    <section class="mb-4">
+        <h2>Spending by Category</h2>
+        <div class="card">
+            <div class="card-body">
+                <div id="moneyFlowChart" style="width: 100%; height: 400px;"></div> <button class="btn btn-sm btn-outline-secondary mt-2">View Detailed Categories</button>
+            </div>
         </div>
-      </div>
+    </section>
+
+    <section class="mb-4">
+        <h2>Spending Habits Report</h2>
+        <div class="card">
+            <div class="card-body">
+                <p>AI Insight: You spent significantly more on dining out last month compared to the previous month.</p>
+                <img src="{% static 'img/money_flow_placeholder.png' %}" alt="Money Flow" class="img-fluid">
+                <button class="btn btn-sm btn-outline-secondary mt-2">Generate Full Report</button>
+                <button class="btn btn-sm btn-info mt-2">Input Income</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="mb-4">
+        <h2>Personalized Finance Tips</h2>
+        <div class="card">
+            <div class="card-body">
+                <p><i class="fa fa-lightbulb me-2"></i>Tip: Consider reducing your subscriptions by reviewing unused services.</p>
+                <p><i class="fa fa-lightbulb me-2"></i>Tip: Setting up automatic transfers to a savings account can help you save
+                    consistently.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="darkModeToggle">
+        <label class="form-check-label" for="darkModeToggle">Dark Mode</label>
     </div>
-  </div>
-</section>
-
-<section class="mb-4">
-  <h2>Spending by Category</h2>
-  <div class="card">
-    <div class="card-body">
-      <div id="moneyFlowChart" style="width: 100%; height: 400px"></div>
-      {# Removed redundant button #}
-        <button class="btn btn-sm btn-outline-secondary mt-2">
-        View Detailed Categories
-      </button>
-    </div>
-  </div>
-</section>
-
-<section class="mb-4">
-  <h2>Spending Habits Report</h2>
-  <div class="card">
-    <div class="card-body">
-      <p>
-        AI Insight: You spent significantly more on dining out last month
-        compared to the previous month. {# Placeholder #}
-      </p>
-      <img
-        src="{% static 'img/money_flow_placeholder.png' %}"
-        alt="Money Flow Placeholder"
-        class="img-fluid"
-        onerror="this.style.display='none'" {# Hide if image fails #}
-      />
-      <button class="btn btn-sm btn-outline-secondary mt-2">
-        Generate Full Report
-      </button>
-      <button class="btn btn-sm btn-info mt-2">Input Income</button>
-    </div>
-  </div>
-</section>
-
-<section class="mb-4">
-  <h2>Personalized Finance Tips</h2>
-  <div class="card">
-    <div class="card-body">
-      <p>
-        <i class="fa fa-lightbulb me-2"></i>Tip: Consider reducing your
-        subscriptions by reviewing unused services. {# Placeholder #}
-      </p>
-      <p>
-        <i class="fa fa-lightbulb me-2"></i>Tip: Setting up automatic transfers
-        to a savings account can help you save consistently. {# Placeholder #}
-      </p>
-    </div>
-  </div>
-</section>
-
-<div class="form-check form-switch mb-3">
-  <input class="form-check-input" type="checkbox" id="darkModeToggle" />
-  <label class="form-check-label" for="darkModeToggle">Dark Mode</label>
-</div>
-
-{# Add Font Awesome if not already in base.html - example link: #}
-{# <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"> #}
-
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-
-<style>
-  body.dark-mode {
-    background-color: #121212;
-    color: #e0e0e0; /* Lighter text for dark mode */
-  }
-
-  .card.dark-mode {
-    background-color: #1e1e1e;
-    color: #e0e0e0;
-    border-color: #333;
-  }
-
-  .card-header.dark-mode {
-    background-color: #2a2a2a;
-    color: #e0e0e0;
-    border-bottom-color: #333;
-  }
-
-  /* Ensure modals adapt */
-  .modal-content.dark-mode {
-     background-color: #1e1e1e;
-     color: #e0e0e0;
-  }
-   .modal-header.dark-mode {
-     border-bottom-color: #333;
-   }
-   .modal-footer.dark-mode {
-     border-top-color: #333;
-   }
-   .form-control.dark-mode, .form-select.dark-mode {
-      background-color: #2a2a2a;
-      color: #e0e0e0;
-      border-color: #444;
-   }
-    .form-control.dark-mode:focus, .form-select.dark-mode:focus {
-       background-color: #333;
-       color: #fff;
-       border-color: #86b7fe; /* Bootstrap focus color */
-       box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    }
-    .form-label.dark-mode {
-       color: #e0e0e0;
-    }
-    .btn-close.dark-mode {
-       filter: invert(1) grayscale(100%) brightness(200%);
-    }
-
-
-  .btn-outline-secondary.dark-mode {
-    color: #adb5bd; /* Lighter gray */
-    border-color: #555;
-  }
-
-  .btn-outline-secondary.dark-mode:hover {
-    background-color: #333;
-    color: #fff;
-    border-color: #555;
-  }
-
-  .progress-bar.dark-mode {
-    /* Keep bootstrap colors or define custom dark mode colors */
-    /* Example: Use a slightly lighter shade for dark mode */
-     /* background-color: #5cb85c; */ /* Lighter green */
-  }
-  .progress-bar.bg-info.dark-mode {
-     /* background-color: #5bc0de; */ /* Lighter info */
-  }
-   .progress-bar.bg-warning.dark-mode {
-     /* background-color: #f0ad4e; */ /* Lighter warning */
-  }
-    .progress-bar.bg-danger.dark-mode {
-     /* background-color: #d9534f; */ /* Lighter danger */
-  }
-
-
-  .alert-warning.dark-mode {
-    background-color: #332701; /* Darker warning bg */
-    border-color: #ffc107;
-    color: #ffc107; /* Warning text color */
-  }
-  .table.dark-mode {
-     color: #e0e0e0;
-     border-color: #333;
-  }
-  .table-striped.dark-mode tbody tr:nth-of-type(odd) {
-      background-color: rgba(255, 255, 255, 0.05);
-  }
-   .table-hover.dark-mode tbody tr:hover {
-       background-color: rgba(255, 255, 255, 0.075);
-   }
-
-
-  .is-invalid {
-    border-color: #dc3545 !important; /* Ensure override */
-  }
-  .invalid-feedback {
-    display: none; /* Correctly hidden by default */
-    width: 100%;
-    margin-top: 0.25rem;
-    font-size: 0.875em;
-    color: #dc3545;
-  }
-  /* Ensure feedback shows with Bootstrap 5 for inputs and selects */
-  .form-control.is-invalid ~ .invalid-feedback,
-  .form-select.is-invalid ~ .invalid-feedback {
-    display: block;
-  }
-  .text-danger {
-    color: #dc3545 !important;
-  }
-  /* Prevent icon inside delete button from capturing clicks */
-  .delete-category-btn i {
-    pointer-events: none;
- }
-</style>
-
-<script>
-    // Helper function to get CSRF token from cookies
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    const csrftoken = getCookie('csrftoken'); // Get CSRF token once
-
-    // Wait for the DOM to be fully loaded before running scripts
-    document.addEventListener('DOMContentLoaded', function () {
-
-        // --- Cache DOM Elements ---
-        const adjustBudgetForm = document.getElementById('adjustBudgetForm');
-        const adjustBudgetModalEl = document.getElementById('adjustBudgetModal');
-        const adjustBudgetModal = adjustBudgetModalEl ? new bootstrap.Modal(adjustBudgetModalEl) : null;
-        const budgetDisplay = document.querySelector('.budget-display'); // Display for main budget amount
-
-        const addCategoryForm = document.getElementById('addCategoryForm');
-        const addCategoryModalEl = document.getElementById('addCategoryModal');
-        const addCategoryModal = addCategoryModalEl ? new bootstrap.Modal(addCategoryModalEl) : null;
-        const categoryErrorAlert = document.getElementById('categoryErrorAlert'); // Alert in Add Category modal
-
-        const budgetCategoryContainer = document.getElementById('budgetCategoryContainer'); // Container for category cards
-
-        const addTransactionForm = document.getElementById('addTransactionForm');
-        const addTransactionModalEl = document.getElementById('addTransactionModal');
-        const addTransactionModal = addTransactionModalEl ? new bootstrap.Modal(addTransactionModalEl) : null;
-        const transactionListBody = document.getElementById('transactionListBody'); // tbody for transactions
-        const totalSpentDisplay = document.getElementById('totalSpentDisplay'); // Span for total spent overall
-        const transactionErrorAlert = document.getElementById('transactionErrorAlert'); // Alert in Add Transaction modal
-        // Get the category select dropdown using its actual ID (likely 'id_category' from Django form)
-        const transactionCategorySelect = document.getElementById('id_category'); // *** ADJUST IF YOUR FORM ID IS DIFFERENT ***
-
-        const darkModeToggle = document.getElementById('darkModeToggle');
-
-        // --- Helper Functions ---
-
-        // Clears validation styles and error messages from a form
-        function clearFormErrors(form) {
-            if (!form) return;
-            form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-            form.querySelectorAll('.invalid-feedback').forEach(el => {
-                el.textContent = '';
-                el.style.display = 'none'; // Ensure feedback is hidden
-            });
-           // Hide general error alerts associated with modals
-           if(transactionErrorAlert) transactionErrorAlert.style.display = 'none';
-           if(categoryErrorAlert) categoryErrorAlert.style.display = 'none';
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body.dark-mode {
+            background-color: #121212;
+            color: #fff;
         }
 
-        // Handles displaying form errors (both field-specific and general)
-        function handleFormErrors(form, formErrors, errorAlertElement, generalError) {
-             if (!form) return;
-             clearFormErrors(form); // Clear previous errors first
-             let firstErrorField = null;
-
-             // Display field-specific errors
-             if (formErrors) {
-                 for (const [field, messages] of Object.entries(formErrors)) {
-                     // Try finding by name, then common ID patterns (like id_fieldname)
-                     const inputElement = form.querySelector(`[name="${field}"], #id_${field}`);
-                     let feedbackElement = null;
-
-                     if (inputElement) {
-                        // Find the sibling .invalid-feedback or a specific #error_fieldname element
-                        feedbackElement = inputElement.nextElementSibling;
-                        if (!feedbackElement || !feedbackElement.classList.contains('invalid-feedback')) {
-                           feedbackElement = form.querySelector(`#error_${field}`);
-                        }
-
-                        inputElement.classList.add('is-invalid');
-                        if (!firstErrorField) firstErrorField = inputElement; // Track first error field
-
-                        if (feedbackElement && messages.length > 0) {
-                           feedbackElement.textContent = messages[0]; // Show the first message
-                           feedbackElement.style.display = 'block';
-                        }
-                     } else if (field === '__all__') {
-                         // Handle non-field errors (often in __all__)
-                         generalError = (generalError ? generalError + '<br>' : '') + messages.join('<br>');
-                     } else {
-                         console.warn(`Could not find input element for field: ${field}`);
-                     }
-                 }
-             }
-
-             // Display general errors in the provided alert element
-             if (generalError) {
-                 if (errorAlertElement) {
-                     errorAlertElement.innerHTML = generalError; // Use innerHTML for potential <br>
-                     errorAlertElement.style.display = 'block';
-                 } else {
-                     alert(`Error: ${generalError}`); // Fallback alert if no element provided
-                 }
-             }
-
-             // Optional: Focus the first field with an error
-             // if (firstErrorField) {
-             //     firstErrorField.focus();
-             // }
+        .card.dark-mode {
+            background-color: #1e1e1e;
+            color: #fff;
+            border-color: #333;
         }
 
-        // Updates the display of a category card (spent amount, progress bar, warning)
-        function updateCategoryCardDisplay(categoryId, newSpentStr, budgetLimitStr) {
-             const categorySpentSpan = document.getElementById(`category-spent-${categoryId}`);
-             const categoryCard = document.getElementById(`category-card-${categoryId}`);
-             if (!categorySpentSpan || !categoryCard) return; // Exit if elements not found
-
-             const newSpent = parseFloat(newSpentStr);
-             const budgetLimit = parseFloat(budgetLimitStr);
-
-             // Update spent amount text
-             categorySpentSpan.textContent = newSpent.toFixed(2);
-
-             // Update Progress Bar
-             const progressBar = categoryCard.querySelector('.progress-bar');
-             if (progressBar) {
-                 const percentage = budgetLimit > 0 ? Math.min(100, (newSpent / budgetLimit) * 100) : 0;
-                 const percentageInt = Math.round(percentage); // Use integer for aria-valuenow
-
-                 progressBar.style.width = `${percentage}%`; // Use precise percentage for style
-                 progressBar.setAttribute('aria-valuenow', percentageInt);
-
-                 // Update progress bar color based on percentage
-                 progressBar.classList.remove('bg-info', 'bg-success', 'bg-warning', 'bg-danger');
-                 if (percentage > 100) {
-                     progressBar.classList.add('bg-danger');
-                     progressBar.style.width = '100%'; // Cap visual at 100% even if overspent
-                 } else if (percentage > 85) {
-                     progressBar.classList.add('bg-warning');
-                 } else {
-                      // Use info or success based on your preference
-                     progressBar.classList.add('bg-info');
-                 }
-             }
-
-             // Show/Hide Over Budget Warning Alert
-             let warningAlert = categoryCard.querySelector('.alert-warning');
-             if (newSpent > budgetLimit) {
-                 if (!warningAlert) { // Add warning if it doesn't exist
-                     const newAlert = document.createElement('div');
-                     newAlert.className = 'alert alert-warning mt-2';
-                     newAlert.setAttribute('role', 'alert');
-                     newAlert.innerHTML = '⚠️ Over Budget!';
-                     // Insert after the 'Spent' paragraph
-                     const spentP = categorySpentSpan.closest('p');
-                     if (spentP) spentP.parentNode.insertBefore(newAlert, spentP.nextSibling);
-                     // Apply dark mode if active
-                     if (document.body.classList.contains('dark-mode')) {
-                         applyDarkModeStyles(newAlert);
-                     }
-                 }
-             } else {
-                 if (warningAlert) { // Remove warning if it exists and no longer needed
-                     warningAlert.remove();
-                 }
-             }
+        .card-header.dark-mode {
+            background-color: #2a2a2a;
+            color: #fff;
+            border-bottom-color: #333;
         }
 
-
-        // --- Plotly Chart Setup ---
-        let chartCategories = [];
-        let chartSpending = [];
-        {% for category in template_data.budget_categories %}
-            // Use escapejs to handle names with quotes or special characters
-            chartCategories.push("{{ category.name|escapejs }}");
-            // Default to 0 if amount_spent is null/undefined
-            chartSpending.push({{ category.amount_spent|default:0 }});
-        {% endfor %}
-
-        // Define chart data structure (used for initial plot and updates)
-        const chartData = [{
-            x: chartCategories,
-            y: chartSpending,
-            type: 'bar',
-            width: 0.3, // Adjust bar width as needed
-            marker: { color: 'rgb(91, 192, 222)' } // Bootstrap info color
-        }];
-
-        // Define chart layout (updated by dark mode toggle)
-        const plotLayout = {
-            title: 'Spending by Category',
-            xaxis: { title: 'Category', automargin: true }, // automargin helps prevent label cutoff
-            yaxis: { title: 'Amount Spent ($)', tickformat: '.2f', automargin: true }, // Format y-axis ticks as currency
-            margin: { l: 60, r: 20, t: 40, b: 80 }, // Adjust left/bottom margins if needed
-            paper_bgcolor: '#fff', // Default light mode background
-            plot_bgcolor: '#fff',  // Default light mode plot area
-            font: {
-               color: '#000' // Default light mode font color
-            }
-        };
-
-        // Initial Chart Plotting (if the chart container exists)
-        const moneyFlowChartDiv = document.getElementById('moneyFlowChart');
-        if (moneyFlowChartDiv){
-            Plotly.newPlot(moneyFlowChartDiv, chartData, plotLayout, {responsive: true});
+        .btn-outline-secondary.dark-mode {
+            color: #fff;
+            border-color: #555;
         }
 
-        // --- Event Listeners ---
+        .btn-outline-secondary.dark-mode:hover {
+            background-color: #333;
+            color: #fff;
+            border-color: #555;
+        }
 
-        // Adjust Monthly Budget Form Submission
-        if (adjustBudgetForm && adjustBudgetModal) {
+        .progress-bar.dark-mode {
+            background-color: #4CAF50;
+        }
+
+        .alert-warning.dark-mode {
+            background-color: #262626;
+            border-color: #333;
+            color: #fff;
+        }
+
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const adjustBudgetForm = document.getElementById('adjustBudgetForm');
+            const adjustBudgetModal = new bootstrap.Modal(document.getElementById('adjustBudgetModal'));
+            const budgetDisplay = document.querySelector('.budget-display');
+            const addCategoryForm = document.getElementById('addCategoryForm');
+            const addCategoryModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
+            const budgetCategoryContainer = document.querySelector('.row.row-cols-1.row-cols-md-3.g-4'); //changed
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const cards = document.querySelectorAll('.card');
+            const cardHeaders = document.querySelectorAll('.card-header');
+            const buttons = document.querySelectorAll('.btn-outline-secondary');
+            const progressBars = document.querySelectorAll('.progress-bar');
+            const alerts = document.querySelectorAll('.alert-warning');
+
+
             adjustBudgetForm.addEventListener('submit', function (event) {
-                 event.preventDefault();
-                 clearFormErrors(adjustBudgetForm);
-                 const formData = new FormData(adjustBudgetForm);
+                event.preventDefault();
 
-                 fetch(adjustBudgetForm.action, {
-                     method: 'POST',
-                     body: formData,
-                     headers: {
-                         'X-Requested-With': 'XMLHttpRequest',
-                         'X-CSRFToken': csrftoken // Include CSRF token
-                     },
-                 })
-                 .then(response => {
-                     if (!response.ok) { // Check for HTTP errors (like 400, 500)
-                         return response.json().then(errData => {
-                             throw { status: response.status, data: errData }; // Throw object with status and data
-                         });
-                     }
-                     return response.json(); // Parse JSON if response is OK
-                 })
-                 .then(data => {
-                     if (data.status === 'success') {
-                         if (budgetDisplay) {
-                             budgetDisplay.textContent = `Budget: $${parseFloat(data.new_budget).toFixed(2)}`;
-                         }
-                         adjustBudgetModal.hide();
-                     } else {
-                         // Handle application-level errors reported in JSON
-                         handleFormErrors(adjustBudgetForm, data.form_errors, null, data.error);
-                     }
-                 })
-                 .catch(error => {
-                     console.error('Adjust Budget Fetch Error:', error);
-                     // Handle network errors or errors thrown from response check
-                     const errorMessage = error?.data?.error || error?.data?.message || 'A network or server error occurred.';
-                     handleFormErrors(adjustBudgetForm, error?.data?.form_errors, null, errorMessage);
-                 });
+                const formData = new FormData(adjustBudgetForm);
+
+                fetch(adjustBudgetForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            budgetDisplay.textContent = `Budget: $${data.new_budget}`;
+                            adjustBudgetModal.hide();
+                        } else {
+                            console.error('Error updating budget:', data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                    });
             });
-        }
 
-        // Add New Budget Category Form Submission
-        if (addCategoryForm && addCategoryModal && budgetCategoryContainer) {
             addCategoryForm.addEventListener('submit', function (event) {
                 event.preventDefault();
-                clearFormErrors(addCategoryForm);
+
                 const formData = new FormData(addCategoryForm);
 
                 fetch(addCategoryForm.action, {
@@ -874,347 +282,515 @@
                     body: formData,
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
-                         'X-CSRFToken': csrftoken // Include CSRF token
                     },
                 })
-                .then(response => { // Similar error handling as adjust budget
-                     if (!response.ok) {
-                         return response.json().then(errData => {
-                             throw { status: response.status, data: errData };
-                         });
-                     }
-                     return response.json();
-                 })
-                .then(data => {
-                    if (data.status === 'success') {
-                        // Create and append the new category card
-                        const newCategoryDiv = document.createElement('div');
-                        newCategoryDiv.className = 'col';
-                        newCategoryDiv.id = `category-card-${data.category_id}`;
-                        // Use 0 for initial spent, limit from data
-                        const initialSpent = 0.00;
-                        const limit = parseFloat(data.category_limit).toFixed(2);
-                        const percentage = 0; // Initial percentage is 0
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Create a new div element for the category
+                            const newCategoryDiv = document.createElement('div');
+                            newCategoryDiv.className = 'col';
+                            newCategoryDiv.id = `category-${data.category_id}`; // Use the ID from the response
 
-                        newCategoryDiv.innerHTML = `
-                           <div class="card h-100">
-                                <div class="card-body position-relative">
-                                    <h5 class="card-title">${data.category_name}</h5>
-                                    <p class="card-text">Budget: $${limit}</p>
-                                    <p class="card-text">Spent: $<span id="category-spent-${data.category_id}">${initialSpent.toFixed(2)}</span></p>
-                                    {# No over budget warning initially #}
-                                    <div class="progress mb-4">
-                                        <div class="progress-bar bg-info" style="width: ${percentage}%" role="progressbar" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100"></div>
+                            // Populate the div with the category data
+                            newCategoryDiv.innerHTML = `
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${data.category_name}</h5>
+                                        <p class="card-text">Budget: $${data.category_limit}</p>
+                                        <p class="card-text">Spent: $${data.category_spent}</p>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-info" style="width: 50%" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
                                     </div>
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-danger delete-category-btn position-absolute bottom-0 end-0 mb-2 me-2"
-                                        data-category-id="${data.category_id}"
-                                        data-category-name="${data.category_name.replace(/"/g, '&quot;')}" {# Escape quotes for data attribute #}
-                                        title="Delete Category"
-                                    >
-                                        <i class="fa fa-trash"></i>
-                                    </button>
                                 </div>
-                            </div>
-                        `;
-                        budgetCategoryContainer.appendChild(newCategoryDiv);
+                            `;
 
-                        // Update Chart Data and Re-plot
-                        chartCategories.push(data.category_name);
-                        chartSpending.push(initialSpent); // Add with initial 0 spending
-                        Plotly.react('moneyFlowChart', chartData, plotLayout); // Use react to update
+                            // Append the new div to the container
+                            budgetCategoryContainer.appendChild(newCategoryDiv);
+                            addCategoryModal.hide();
 
-                        // Add category to the transaction form dropdown
-                         if (transactionCategorySelect) {
-                             const option = new Option(data.category_name, data.category_id);
-                             transactionCategorySelect.add(option);
-                         }
-
-                        // Reset form, hide modal
-                        addCategoryForm.reset();
-                        addCategoryModal.hide();
-
-                        // Apply dark mode styles if needed
-                        if (document.body.classList.contains('dark-mode')) {
-                           applyDarkModeStyles(newCategoryDiv.querySelector('.card'));
+                            if (parseFloat(data.category_spent) > parseFloat(data.category_limit)) {
+                                alert(`⚠️ You have spent more than your budget for ${data.category_name}!`);
+                            }
+                        } else {
+                            console.error('Error adding category:', data.error);
                         }
-
-                    } else {
-                         handleFormErrors(addCategoryForm, data.form_errors, categoryErrorAlert, data.error);
-                    }
-                })
-                .catch(error => {
-                    console.error('Add Category Fetch Error:', error);
-                    const errorMessage = error?.data?.error || error?.data?.message || 'A network or server error occurred.';
-                    handleFormErrors(addCategoryForm, error?.data?.form_errors, categoryErrorAlert, errorMessage);
-                });
+                    })
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                    });
             });
-        }
 
-        // Add New Transaction Form Submission
-        if (addTransactionForm && addTransactionModal && transactionListBody) {
-            addTransactionForm.addEventListener('submit', function(event) {
-                 event.preventDefault();
-                 clearFormErrors(addTransactionForm);
-                 const formData = new FormData(addTransactionForm);
-
-                 fetch(addTransactionForm.action, {
-                     method: 'POST',
-                     body: formData,
-                     headers: {
-                         'X-Requested-With': 'XMLHttpRequest',
-                         'X-CSRFToken': csrftoken // Include CSRF token
-                     },
-                 })
-                 .then(response => { // Similar error handling
-                     if (!response.ok) {
-                         return response.json().then(errData => {
-                             throw { status: response.status, data: errData };
-                         });
-                     }
-                     return response.json();
-                 })
-                 .then(data => {
-                     if (data.status === 'success') {
-                         // 1. Update Category Card Display (Spent Amount, Progress Bar)
-                         const categoryCard = document.getElementById(`category-card-${data.transaction.category_id}`);
-                         if (categoryCard) {
-                             const budgetLimitText = categoryCard.querySelector('.card-text:nth-of-type(1)').textContent;
-                             const budgetLimitMatch = budgetLimitText.match(/Budget: \$([\d.]+)/);
-                             if (budgetLimitMatch) {
-                                 updateCategoryCardDisplay(data.transaction.category_id, data.updated_category_spent, budgetLimitMatch[1]);
-                             }
-                         }
-
-                         // 2. Update Total Spent Display
-                         if (totalSpentDisplay) {
-                             totalSpentDisplay.textContent = parseFloat(data.total_spent).toFixed(2);
-                         }
-
-                         // 3. Add Transaction to Recent Transactions Table
-                         const newRow = document.createElement('tr');
-                         newRow.id = `transaction-row-${data.transaction.id}`;
-                         newRow.innerHTML = `
-                             <td>${data.transaction.date}</td>
-                             <td>${data.transaction.category_name}</td>
-                             <td>${data.transaction.description || '-'}</td>
-                             <td class="text-end text-danger">-$${parseFloat(data.transaction.amount).toFixed(2)}</td>
-                         `;
-                         // Remove "No transactions" row if it exists
-                         const noTransactionRow = document.getElementById('no-transactions-row');
-                         if (noTransactionRow) {
-                             noTransactionRow.remove();
-                         }
-                         // Insert new row at the top of the table body
-                         transactionListBody.insertBefore(newRow, transactionListBody.firstChild);
-                          // Apply dark mode styling if needed
-                          if (document.body.classList.contains('dark-mode')) {
-                               applyDarkModeStyles(newRow); // You might need to enhance applyDarkModeStyles for table rows
-                          }
-
-                         // 4. Update Plotly Chart Data
-                         let categoryIndex = chartCategories.indexOf(data.transaction.category_name);
-                          if (categoryIndex !== -1) {
-                              chartSpending[categoryIndex] = parseFloat(data.updated_category_spent);
-                          } else {
-                               // This might happen if categories can be added/deleted elsewhere
-                               console.warn("Category from transaction not found in chart data. Chart might be stale.");
-                               // Optionally, you could try adding it dynamically, but it's safer to ensure consistency
-                               // chartCategories.push(data.transaction.category_name);
-                               // chartSpending.push(parseFloat(data.updated_category_spent));
-                          }
-                          // Re-render the chart with updated data
-                          Plotly.react('moneyFlowChart', chartData, plotLayout);
-
-                         // 5. Reset Form and Hide Modal
-                         addTransactionForm.reset();
-                         addTransactionModal.hide();
-
-                     } else {
-                        handleFormErrors(addTransactionForm, data.form_errors, transactionErrorAlert, data.error);
-                     }
-                 })
-                 .catch(error => {
-                     console.error('Add Transaction Fetch Error:', error);
-                     const errorMessage = error?.data?.error || error?.data?.message || 'A network or server error occurred.';
-                     handleFormErrors(addTransactionForm, error?.data?.form_errors, transactionErrorAlert, errorMessage);
-                 });
-            });
-        }
-
-
-        // --- DELETE CATEGORY --- (Event Delegation on Container)
-        if (budgetCategoryContainer) {
-            budgetCategoryContainer.addEventListener('click', function(event) {
-                // Find the closest ancestor button with the correct class
-                const deleteButton = event.target.closest('.delete-category-btn');
-
-                if (deleteButton) {
-                    const categoryId = deleteButton.dataset.categoryId;
-                    const categoryName = deleteButton.dataset.categoryName; // Get name for confirmation
-
-                    // Use a confirmation dialog
-                    if (confirm(`Are you sure you want to delete the category "${categoryName}"? This action cannot be undone.`)) {
-
-                        // Construct the URL dynamically - Ensure this matches your urls.py
-                        // Example: /dashboard/category/123/delete/
-                        const deleteUrl = `/dashboard/category/${categoryId}/delete/`; // *** VERIFY THIS URL STRUCTURE ***
-
-                        fetch(deleteUrl, {
-                            method: 'DELETE', // Use DELETE method as defined in the view
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest', // Identify as AJAX
-                                'X-CSRFToken': csrftoken // Include CSRF token
-                            }
-                        })
-                        .then(response => {
-                            if (response.ok) { // Status 200-299
-                                 return response.json(); // Expect JSON response on success
-                            } else {
-                                // Attempt to parse error JSON, otherwise use status text
-                                return response.json().then(errData => {
-                                    // Throw an object containing the error details
-                                    throw { status: response.status, message: errData.message || `Server error: ${response.status}` };
-                                }).catch(() => {
-                                     // Fallback if response body is not JSON or empty
-                                     throw { status: response.status, message: `Failed to delete category. Status: ${response.status}` };
-                                });
-                            }
-                        })
-                        .then(data => {
-                            // Check the status field in the JSON response from the view
-                            if (data.status === 'success') {
-                                // 1. Remove the category card from the DOM
-                                const cardToRemove = document.getElementById(`category-card-${categoryId}`);
-                                if (cardToRemove) {
-                                    cardToRemove.remove();
-                                }
-
-                                // 2. Remove the category from the 'Add Transaction' dropdown
-                                if (transactionCategorySelect) {
-                                    const optionToRemove = transactionCategorySelect.querySelector(`option[value="${categoryId}"]`);
-                                    if (optionToRemove) {
-                                        optionToRemove.remove();
-                                    }
-                                }
-
-                                 // 3. Update the Plotly Chart Data
-                                 const indexToRemove = chartCategories.indexOf(categoryName);
-                                 if (indexToRemove > -1) {
-                                     chartCategories.splice(indexToRemove, 1); // Remove name
-                                     chartSpending.splice(indexToRemove, 1); // Remove spending amount
-                                     // Update the chart with the modified data arrays
-                                     Plotly.react('moneyFlowChart', chartData, plotLayout);
-                                 }
-
-                                // 4. Optional: Update total spent display if backend provides it
-                                if (data.total_spent !== undefined && totalSpentDisplay) {
-                                      totalSpentDisplay.textContent = parseFloat(data.total_spent).toFixed(2);
-                                }
-
-                                console.log(`Category ${categoryId} (${categoryName}) deleted successfully.`);
-                                // Optional: Show a success toast notification instead of console log
-                            } else {
-                                 // Handle cases where the server responds with 200 OK but indicates failure in JSON
-                                 throw { status: 200, message: data.message || 'Deletion failed.' };
-                            }
-                        })
-                        .catch(error => {
-                            // Catch network errors or errors thrown from response handling
-                            console.error('Error deleting category:', error);
-                            // Display the error message from the thrown object or a default
-                            alert(`Error: ${error.message || 'Could not delete category.'}`);
-                        });
-                    }
-                }
-            });
-        }
-
-
-        // --- DARK MODE ---
-
-        // Applies dark mode classes to relevant elements (including modals and dynamic elements)
-        function applyDarkModeStyles(element) {
-             if (!element) return;
-             const isDarkModeActive = document.body.classList.contains('dark-mode');
-
-             // Card elements
-             if (element.matches && element.matches('.card')) { // Check if it's a card
-                 element.classList.toggle('dark-mode', isDarkModeActive);
-                 element.querySelector('.card-header')?.classList.toggle('dark-mode', isDarkModeActive);
-                 element.querySelectorAll('.btn-outline-secondary').forEach(btn => btn.classList.toggle('dark-mode', isDarkModeActive));
-                 element.querySelectorAll('.progress-bar').forEach(bar => bar.classList.toggle('dark-mode', isDarkModeActive));
-                 element.querySelectorAll('.alert-warning').forEach(alert => alert.classList.toggle('dark-mode', isDarkModeActive));
-             }
-             // Specific alert element
-             else if (element.matches && element.matches('.alert-warning')) {
-                element.classList.toggle('dark-mode', isDarkModeActive);
-             }
-             // Modal elements
-             else if (element.matches && element.matches('.modal')) {
-                 element.querySelector('.modal-content')?.classList.toggle('dark-mode', isDarkModeActive);
-                 element.querySelector('.modal-header')?.classList.toggle('dark-mode', isDarkModeActive);
-                 element.querySelector('.modal-footer')?.classList.toggle('dark-mode', isDarkModeActive);
-                 element.querySelectorAll('.form-control, .form-select').forEach(input => input.classList.toggle('dark-mode', isDarkModeActive));
-                 element.querySelectorAll('.form-label').forEach(label => label.classList.toggle('dark-mode', isDarkModeActive));
-                 element.querySelector('.btn-close')?.classList.toggle('dark-mode', isDarkModeActive);
-             }
-             // Table rows (basic example)
-             else if (element.tagName === 'TR') {
-                  // You might need more specific styling based on table classes
-                  element.classList.toggle('dark-mode-row', isDarkModeActive); // Add a custom class if needed
-             }
-        }
-
-        // Toggles dark mode for the entire page and updates Plotly chart
-        function toggleDarkMode() {
-            const isDarkMode = document.body.classList.toggle('dark-mode');
-
-            // Toggle classes on static elements
-            document.querySelectorAll('.card').forEach(el => el.classList.toggle('dark-mode', isDarkMode));
-            document.querySelectorAll('.card-header').forEach(el => el.classList.toggle('dark-mode', isDarkMode));
-            document.querySelectorAll('.modal').forEach(applyDarkModeStyles); // Apply to modals too
-            document.querySelectorAll('.table').forEach(el => el.classList.toggle('dark-mode', isDarkMode)); // Apply to tables
-            document.querySelectorAll('.btn-outline-secondary').forEach(el => el.classList.toggle('dark-mode', isDarkMode));
-            document.querySelectorAll('.progress-bar').forEach(el => el.classList.toggle('dark-mode', isDarkMode));
-            document.querySelectorAll('.alert-warning').forEach(el => el.classList.toggle('dark-mode', isDarkMode));
-            // Add other static elements as needed
-
-            // Update Plotly chart layout for dark mode
-            plotLayout.paper_bgcolor = isDarkMode ? '#1e1e1e' : '#fff';
-            plotLayout.plot_bgcolor = isDarkMode ? '#1e1e1e' : '#fff';
-            plotLayout.font.color = isDarkMode ? '#e0e0e0' : '#000';
-            if (moneyFlowChartDiv) { // Check if chart exists before updating
-                Plotly.react(moneyFlowChartDiv, chartData, plotLayout);
+            // Function to toggle dark mode
+            function toggleDarkMode() {
+                document.body.classList.toggle('dark-mode');
+                cards.forEach(card => card.classList.toggle('dark-mode'));
+                cardHeaders.forEach(cardHeader => cardHeader.classList.toggle('dark-mode'));
+                buttons.forEach(button => button.classList.toggle('dark-mode'));
+                progressBars.forEach(bar => bar.classList.toggle('dark-mode'));
+                alerts.forEach(alert => alert.classList.toggle('dark-mode'));
+                // Store the user's preference in local storage
+                localStorage.setItem('darkMode', document.body.classList.contains('dark-mode') ? 'enabled' : 'disabled');
             }
 
-            // Store preference
-            localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
-        }
-
-        // Dark Mode Toggle Event Listener
-        if (darkModeToggle) {
+            // Event listener for the dark mode toggle checkbox
             darkModeToggle.addEventListener('change', toggleDarkMode);
 
-            // Apply dark mode on initial page load if preference is stored
+            // Check local storage for saved dark mode preference
             if (localStorage.getItem('darkMode') === 'enabled') {
-                 // Set the toggle checked *before* calling toggleDarkMode
-                 // to ensure the initial state is correct visually.
-                 darkModeToggle.checked = true;
-                 // Call toggleDarkMode to apply styles and update chart layout
-                 toggleDarkMode();
+                document.body.classList.add('dark-mode');
+                cards.forEach(card => card.classList.add('dark-mode'));
+                cardHeaders.forEach(cardHeader => cardHeader.classList.add('dark-mode'));
+                buttons.forEach(button => button.classList.add('dark-mode'));
+                progressBars.forEach(bar => bar.classList.add('dark-mode'));
+                alerts.forEach(alert => alert.classList.add('dark-mode'));
+                darkModeToggle.checked = true;
+            }
+        });
+
+
+    // Add chart data arrays
+    let chartCategories = [];
+    let chartSpending = [];
+    {% for category in template_data.budget_categories %}
+    chartCategories.push("{{ category.name }}");
+    chartSpending.push({{ category.amount_spent }});
+    {% endfor %}
+    // Create the chart initially
+    Plotly.newPlot('moneyFlowChart', [{
+        x: chartCategories,
+        y: chartSpending,
+        type: 'bar',
+        width: 0.3,
+        marker: { color: 'rgb(91, 192, 222)' }
+    }], {
+        title: 'Spending by Category',
+        xaxis: { title: 'Category' },
+        yaxis: { title: 'Amount Spent ($)' }
+    });
+
+    // Inside addCategoryForm fetch `.then(data => {...}` block:
+    if (data.status === 'success') {
+        // Existing DOM update code...
+
+        // Update the chart with new data
+        chartCategories.push(data.category_name);
+        chartSpending.push(data.category_spent);
+
+        Plotly.update('moneyFlowChart', {
+            x: [chartCategories],
+            y: [chartSpending]
+        });
+    }
+
+
+    </script>
+    
+    <script>
+        // Wait for the page to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find the "Generate Full Report" button
+            const reportButtons = document.querySelectorAll('button');
+            let generateReportBtn = null;
+            
+            for (let btn of reportButtons) {
+                if (btn.textContent.trim() === 'Generate Full Report') {
+                    generateReportBtn = btn;
+                    break;
+                }
+            }
+            
+            if (generateReportBtn) {
+                // Add click event listener
+                generateReportBtn.addEventListener('click', handleGenerateReport);
+                console.log("Event listener attached to Generate Full Report button");
             } else {
-                 // Ensure chart layout is set for light mode initially
-                 plotLayout.paper_bgcolor = '#fff';
-                 plotLayout.plot_bgcolor = '#fff';
-                 plotLayout.font.color = '#000';
-                 if (moneyFlowChartDiv) { // Update chart if it exists
-                     Plotly.react(moneyFlowChartDiv, chartData, plotLayout);
-                 }
+                console.error("Could not find Generate Full Report button");
+            }
+        });
+        
+        // Handle the generate report button click
+        async function handleGenerateReport() {
+            console.log("Generate Report button clicked!");
+            
+            // Find the report section (the parent of the button)
+            const reportSection = findSpendingHabitsSection();
+            if (!reportSection) {
+                console.error("Could not find Spending Habits Report section");
+                return;
+            }
+            
+            const reportCardBody = reportSection.querySelector('.card-body');
+            if (!reportCardBody) {
+                console.error("Could not find card body in Spending Habits Report section");
+                return;
+            }
+            
+            // Save original content to restore later if needed
+            const originalContent = reportCardBody.innerHTML;
+            
+            // Show loading spinner
+            reportCardBody.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Generating your personalized spending report...</p>
+                    <p class="text-muted small">This may take a moment...</p>
+                </div>
+            `;
+            
+            try {
+                // Collect budget data
+                const budgetData = collectBudgetData();
+                console.log("Budget data collected:", budgetData);
+                
+                // Generate mock report (no API needed)
+                const reportHTML = generateMockReport(budgetData);
+                
+                // Simulate loading delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Display the report
+                reportCardBody.innerHTML = `
+                    <h4 class="mb-3">Your Personalized Spending Report</h4>
+                    <div class="report-content mb-3">
+                        ${reportHTML}
+                    </div>
+                    <div class="d-flex justify-content-between mt-3">
+                        <button class="btn btn-sm btn-outline-secondary close-report-btn">Close Report</button>
+                        <button class="btn btn-sm btn-primary download-report-btn">Download Report</button>
+                    </div>
+                `;
+                
+                // Add event listeners to new buttons
+                reportCardBody.querySelector('.close-report-btn').addEventListener('click', function() {
+                    reportCardBody.innerHTML = originalContent;
+                    
+                    // Re-find the report button and re-attach event listener
+                    setTimeout(() => {
+                        const newButtons = reportCardBody.querySelectorAll('button');
+                        for (let btn of newButtons) {
+                            if (btn.textContent.trim() === 'Generate Full Report') {
+                                btn.addEventListener('click', handleGenerateReport);
+                                break;
+                            }
+                        }
+                    }, 100);
+                });
+                
+                reportCardBody.querySelector('.download-report-btn').addEventListener('click', function() {
+                    downloadReport(reportHTML);
+                });
+                
+            } catch (error) {
+                console.error("Error:", error);
+                
+                // Show error message
+                reportCardBody.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5>Error Generating Report</h5>
+                        <p>${error.message || "Unknown error occurred"}</p>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-outline-secondary try-again-btn">Try Again</button>
+                        <button class="btn btn-sm btn-outline-secondary ms-2 cancel-btn">Cancel</button>
+                    </div>
+                `;
+                
+                // Add event listeners to error buttons
+                reportCardBody.querySelector('.try-again-btn').addEventListener('click', function() {
+                    handleGenerateReport();
+                });
+                
+                reportCardBody.querySelector('.cancel-btn').addEventListener('click', function() {
+                    reportCardBody.innerHTML = originalContent;
+                    
+                    // Re-find the report button and re-attach event listener
+                    setTimeout(() => {
+                        const newButtons = reportCardBody.querySelectorAll('button');
+                        for (let btn of newButtons) {
+                            if (btn.textContent.trim() === 'Generate Full Report') {
+                                btn.addEventListener('click', handleGenerateReport);
+                                break;
+                            }
+                        }
+                    }, 100);
+                });
             }
         }
-
-    }); // End DOMContentLoaded
-</script>
+        
+        // Find the spending habits section
+        function findSpendingHabitsSection() {
+            const sections = document.querySelectorAll('section');
+            for (let section of sections) {
+                const heading = section.querySelector('h2');
+                if (heading && heading.textContent.includes('Spending Habits Report')) {
+                    return section;
+                }
+            }
+            return null;
+        }
+        
+        // Collect budget data from the dashboard
+        function collectBudgetData() {
+            // Get monthly budget
+            const budgetDisplay = document.querySelector('.budget-display');
+            const totalSpentElement = document.getElementById('totalSpent');
+            
+            const monthlyBudgetText = budgetDisplay ? budgetDisplay.textContent : '';
+            const monthlyBudget = parseFloat(monthlyBudgetText.replace('Budget: $', '')) || 0;
+            
+            const totalSpent = totalSpentElement ? parseFloat(totalSpentElement.textContent) || 0 : 0;
+            
+            // Get categories
+            const categories = [];
+            const categoryElements = document.querySelectorAll('[id^="category-"]');
+            
+            categoryElements.forEach(element => {
+                const titleElement = element.querySelector('.card-title');
+                const budgetElement = element.querySelector('.card-text:nth-of-type(1)');
+                const spentElement = element.querySelector('.card-text:nth-of-type(2)');
+                
+                if (titleElement && budgetElement && spentElement) {
+                    const name = titleElement.textContent.trim();
+                    const budget = parseFloat(budgetElement.textContent.replace('Budget: $', '')) || 0;
+                    const spent = parseFloat(spentElement.textContent.replace('Spent: $', '')) || 0;
+                    
+                    categories.push({
+                        name: name,
+                        budget: budget,
+                        spent: spent,
+                        over_budget: spent > budget,
+                        percentage: budget > 0 ? (spent / budget) * 100 : 0
+                    });
+                }
+            });
+            
+            // Return the data
+            return {
+                monthly_budget: monthlyBudget,
+                total_spent: totalSpent,
+                remaining: monthlyBudget - totalSpent,
+                over_budget: totalSpent > monthlyBudget,
+                categories: categories
+            };
+        }
+        
+        // Generate a mock AI report based on the budget data (no API needed)
+        function generateMockReport(budgetData) {
+            // Overall budget status
+            const overBudget = budgetData.total_spent > budgetData.monthly_budget;
+            const budgetStatus = overBudget ? 
+                `<div class="alert alert-danger">You are $${(budgetData.total_spent - budgetData.monthly_budget).toFixed(2)} over budget this month!</div>` : 
+                `<div class="alert alert-success">You are within budget! You have $${(budgetData.monthly_budget - budgetData.total_spent).toFixed(2)} remaining.</div>`;
+            
+            // Calculate budget percentage
+            const budgetPercentage = budgetData.monthly_budget > 0 ? 
+                Math.min(Math.round((budgetData.total_spent / budgetData.monthly_budget) * 100), 100) : 100;
+            
+            // Budget progress bar
+            const progressBarColor = overBudget ? 'bg-danger' : (budgetPercentage > 80 ? 'bg-warning' : 'bg-success');
+            const progressBar = `
+                <div class="progress mb-3">
+                    <div class="progress-bar ${progressBarColor}" role="progressbar" style="width: ${budgetPercentage}%" 
+                        aria-valuenow="${budgetPercentage}" aria-valuemin="0" aria-valuemax="100">
+                        ${budgetPercentage}%
+                    </div>
+                </div>
+            `;
+            
+            // Category analysis
+            let categoryAnalysis = '';
+            let recommendations = '';
+            
+            if (budgetData.categories.length === 0) {
+                categoryAnalysis = '<p>No budget categories found. Add categories to get a detailed analysis.</p>';
+            } else {
+                // Sort categories by percentage spent
+                const sortedCategories = [...budgetData.categories].sort((a, b) => {
+                    const aPercent = a.budget > 0 ? a.spent / a.budget : 0;
+                    const bPercent = b.budget > 0 ? b.spent / b.budget : 0;
+                    return bPercent - aPercent;
+                });
+                
+                // Generate category cards
+                categoryAnalysis = '<div class="row">';
+                sortedCategories.forEach(category => {
+                    const percentage = category.budget > 0 ? Math.min(Math.round((category.spent / category.budget) * 100), 100) : 100;
+                    const cardClass = category.over_budget ? 'border-danger' : (percentage > 80 ? 'border-warning' : 'border-success');
+                    const barColor = category.over_budget ? 'bg-danger' : (percentage > 80 ? 'bg-warning' : 'bg-success');
+                    
+                    categoryAnalysis += `
+                        <div class="col-md-6 mb-3">
+                            <div class="card ${cardClass}">
+                                <div class="card-body">
+                                    <h5 class="card-title">${category.name}</h5>
+                                    <p class="card-text">Budget: $${category.budget.toFixed(2)}</p>
+                                    <p class="card-text">Spent: $${category.spent.toFixed(2)}</p>
+                                    <div class="progress">
+                                        <div class="progress-bar ${barColor}" role="progressbar" style="width: ${percentage}%" 
+                                            aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">
+                                            ${percentage}%
+                                        </div>
+                                    </div>
+                                    ${category.over_budget ? 
+                                        `<div class="alert alert-danger mt-2 mb-0">
+                                            Over budget by $${(category.spent - category.budget).toFixed(2)}
+                                        </div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Generate recommendation for this category
+                    if (category.over_budget) {
+                        recommendations += `
+                            <li class="mb-2">Consider reducing spending in <strong>${category.name}</strong>. 
+                            You are currently $${(category.spent - category.budget).toFixed(2)} over your budget.</li>
+                        `;
+                    } else if (percentage > 80) {
+                        recommendations += `
+                            <li class="mb-2">Your <strong>${category.name}</strong> spending is approaching your budget limit. 
+                            You have $${(category.budget - category.spent).toFixed(2)} remaining.</li>
+                        `;
+                    }
+                });
+                categoryAnalysis += '</div>';
+                
+                // Add general recommendations if needed
+                if (recommendations === '') {
+                    recommendations = '<li>Great job staying within budget in all categories!</li>';
+                }
+                
+                // Add general saving tips
+                recommendations += `
+                    <li class="mb-2">Track your daily expenses to stay aware of your spending patterns.</li>
+                    <li class="mb-2">Consider automating savings by setting up automatic transfers to a savings account.</li>
+                    <li class="mb-2">Look for unnecessary subscriptions or services you can cancel or downgrade.</li>
+                `;
+            }
+            
+            // Spending trends (mock data with actual category names)
+            let trendsHTML = '';
+            if (budgetData.categories.length > 0) {
+                trendsHTML = `
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Spending Trends</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Based on your current spending patterns:</p>
+                            <ul>
+                `;
+                
+                // Get highest spending category
+                const highestCategory = [...budgetData.categories].sort((a, b) => b.spent - a.spent)[0];
+                trendsHTML += `<li>Your highest spending category is <strong>${highestCategory.name}</strong> at $${highestCategory.spent.toFixed(2)}.</li>`;
+                
+                // Calculate average spending per category
+                const totalCategories = budgetData.categories.length;
+                const avgSpending = budgetData.total_spent / totalCategories;
+                trendsHTML += `<li>You're spending an average of $${avgSpending.toFixed(2)} per category.</li>`;
+                
+                // Add some projected data
+                trendsHTML += `<li>At your current rate, you'll spend approximately $${(budgetData.total_spent * 12).toFixed(2)} over the next year.</li>`;
+                
+                trendsHTML += `
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Compile the full report
+            return `
+                <div class="container">
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Budget Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Monthly Budget: $${budgetData.monthly_budget.toFixed(2)}</h6>
+                                    <h6>Total Spent: $${budgetData.total_spent.toFixed(2)}</h6>
+                                    <h6>Remaining: $${(budgetData.monthly_budget - budgetData.total_spent).toFixed(2)}</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    ${budgetStatus}
+                                    ${progressBar}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Category Analysis</h5>
+                        </div>
+                        <div class="card-body">
+                            ${categoryAnalysis}
+                        </div>
+                    </div>
+                    
+                    ${trendsHTML}
+                    
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Recommendations</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul>
+                                ${recommendations}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Download report as HTML file
+        function downloadReport(reportContent) {
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Personal Spending Report</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                    <style>
+                        body { padding: 20px; }
+                        .report-header { margin-bottom: 20px; text-align: center; }
+                        .report-date { margin-bottom: 20px; text-align: right; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container py-5">
+                        <div class="report-header">
+                            <h1>Personal Spending Report</h1>
+                            <p class="report-date">Generated on ${new Date().toLocaleDateString()}</p>
+                        </div>
+                        <div class="report-content">
+                            ${reportContent}
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Create a blob and download link
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `spending-report-${new Date().toISOString().slice(0, 10)}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        </script>
 {% endblock content %}
